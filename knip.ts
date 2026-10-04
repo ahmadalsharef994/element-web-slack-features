@@ -123,8 +123,6 @@ export default {
     ],
     ignoreExportsUsedInFile: true,
     ignoreBinaries: [
-        // Optional for coverage:diff development script
-        "diff-cover",
     ],
     compilers: {
         pcss: (text: string) =>

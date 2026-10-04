@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Instructions for AI coding agents working in this repository. Humans should read
-[CONTRIBUTING.md](./CONTRIBUTING.md) and [code_style.md](./code_style.md) instead — this file summarises those and
+[CONTRIBUTING.md](./CONTRIBUTING.md) instead — this file summarises those and
 adds the things that are easy to get wrong here.
 
 ## Repository layout
@@ -127,7 +127,7 @@ Reference implementation: `packages/shared-components/src/room-list/RoomListSear
 
 ## Code style
 
-Read [code_style.md](./code_style.md). The points most often missed:
+The points most often missed:
 
 - **Every new file needs a copyright header**, enforced by oxlint (`element-call/copyright-header`). Lint fails
   without it. Substitute the actual current year — check it rather than copying a year from another file — and leave
@@ -179,7 +179,6 @@ Keep comments short and relevant.
     pnpm test:unit --coverage                              # vitest, writes coverage/lcov.info
     cd apps/web && pnpm coverage                           # jest only, writes apps/web/coverage/lcov.info
     cd packages/shared-components && pnpm coverage
-    pnpm coverage:diff                                     # from the root, needs diff_cover installed
     ```
 
 ## Commits

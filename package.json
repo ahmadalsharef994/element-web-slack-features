@@ -21,13 +21,11 @@
         "lint:workflows": "find .github/workflows -type f \\( -iname '*.yaml' -o -iname '*.yml' \\) -print -exec action-validator {} ';'",
         "lint:knip": "knip --no-tag-hints && knip --strict --exclude unlisted,dependencies,binaries",
         "lint:unused-settings": "node scripts/find-unused-settings.ts",
-        "install:git-hooks": "husky",
         "postinstall": "node scripts/pnpm-link.ts && pnpm run -r sane-postinstall",
         "docs:dev": "vitepress dev docs",
         "docs:build": "vitepress build docs",
         "docs:preview": "vitepress preview docs",
-        "test:unit": "nx run-many -t test:unit:prepare -p && vitest run",
-        "coverage:diff": "diff-cover --config-file diff-cover.toml apps/web/coverage/lcov.info packages/shared-components/coverage/lcov.info coverage/lcov.info"
+        "test:unit": "nx run-many -t test:unit:prepare -p && vitest run"
     },
     "devDependencies": {
         "@action-validator/cli": "^0.6.0",
@@ -41,9 +39,7 @@
         "cronstrue": "^3.0.0",
         "eslint-plugin-element-call": "github:element-hq/element-call#main&path:/eslint",
         "eslint-plugin-storybook": "^10.4.6",
-        "husky": "^9.0.0",
         "knip": "6.38.0",
-        "lint-staged": "^17.0.0",
         "lodash": "^4.17.21",
         "mermaid": "^12.0.0",
         "minimist": "^1.2.6",
