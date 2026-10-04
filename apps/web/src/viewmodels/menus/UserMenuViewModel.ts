@@ -22,6 +22,10 @@ import type { MatrixClient } from "matrix-js-sdk/src/matrix";
 import { clearAllUserStatus } from "../../utils/userStatus";
 import { type SetStatusViewModel, UserMenuSetStatusViewModel } from "../status/SetStatusViewModel";
 import SettingsStore from "../../settings/SettingsStore";
+import { SettingLevel } from "../../settings/SettingLevel";
+
+/** How long the user menu snoozes notifications for */
+const SNOOZE_MS = 60 * 60 * 1000;
 
 // Matches maximum size of an avatar in the UserMenu
 const AVATAR_PX = 88;
@@ -35,6 +39,10 @@ export class UserMenuViewModel
     implements UserMenuViewActions
 {
     public readonly setStatusVm: SetStatusViewModel;
+    private static isSnoozed(): boolean {
+        return Date.now() < SettingsStore.getValue("notificationsSnoozedUntil");
+    }
+
     private static computeSnapshot(
         client: MatrixClient,
         ownProfileStore: OwnProfileStore,
@@ -61,6 +69,7 @@ export class UserMenuViewModel
             userStatus: ownProfileStore.userStatus,
             showUserStatus: SettingsStore.getValue("feature_user_status") && isAuthenticated,
             setStatusViewModel,
+            notificationsSnoozed: UserMenuViewModel.isSnoozed(),
             actions: {
                 createAccount: !isAuthenticated,
                 signIn: !isAuthenticated,
@@ -69,6 +78,7 @@ export class UserMenuViewModel
                 openSecurity: isAuthenticated,
                 openFeedback: shouldShowFeedback(),
                 openSettings: true,
+                snoozeNotifications: isAuthenticated,
             },
         };
     }
@@ -98,7 +108,14 @@ export class UserMenuViewModel
     };
 
     public readonly setOpen = (isOpen: boolean): void => {
-        this.snapshot.merge({ open: isOpen });
+        // The snooze may have ended or been changed with /snooze since the menu was last open
+        this.snapshot.merge({ open: isOpen, notificationsSnoozed: UserMenuViewModel.isSnoozed() });
+    };
+
+    public readonly toggleSnooze = (): void => {
+        const snoozedUntil = UserMenuViewModel.isSnoozed() ? 0 : Date.now() + SNOOZE_MS;
+        void SettingsStore.setValue("notificationsSnoozedUntil", null, SettingLevel.DEVICE, snoozedUntil);
+        this.snapshot.merge({ open: false, notificationsSnoozed: snoozedUntil > 0 });
     };
 
     public readonly setExpanded = (expanded: boolean): void => {

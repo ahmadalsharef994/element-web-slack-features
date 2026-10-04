@@ -26,6 +26,8 @@ import { UserTab } from "../../components/views/dialogs/UserTab";
 import Modal from "../../Modal";
 import FeedbackDialog from "../../components/views/dialogs/FeedbackDialog";
 import { type OwnProfileStore } from "../../stores/OwnProfileStore";
+import SettingsStore from "../../settings/SettingsStore";
+import { SettingLevel } from "../../settings/SettingLevel";
 
 describe("UserMenuViewModel", () => {
     let dispatcher: MatrixDispatcher;
@@ -220,5 +222,34 @@ describe("UserMenuViewModel", () => {
                 action: "start_login",
             }),
         );
+    });
+
+    it("should snooze notifications for an hour and resume them", () => {
+        vi.useFakeTimers({ now: 1_000_000 });
+        let snoozedUntil = 0;
+        vi.spyOn(SettingsStore, "getValue").mockImplementation(((name: string) =>
+            name === "notificationsSnoozedUntil"
+                ? snoozedUntil
+                : undefined) as unknown as typeof SettingsStore.getValue);
+        const setValue = vi.spyOn(SettingsStore, "setValue").mockImplementation(async (_name, _room, _level, value) => {
+            snoozedUntil = value as number;
+        });
+
+        const vm = new UserMenuViewModel({ ownProfileStore: mockOwnProfileStore }, dispatcher, client, true);
+        expect(vm.getSnapshot().notificationsSnoozed).toBe(false);
+
+        vm.toggleSnooze();
+        expect(setValue).toHaveBeenCalledWith(
+            "notificationsSnoozedUntil",
+            null,
+            SettingLevel.DEVICE,
+            1_000_000 + 60 * 60 * 1000,
+        );
+        expect(vm.getSnapshot().notificationsSnoozed).toBe(true);
+
+        vm.toggleSnooze();
+        expect(setValue).toHaveBeenLastCalledWith("notificationsSnoozedUntil", null, SettingLevel.DEVICE, 0);
+        expect(vm.getSnapshot().notificationsSnoozed).toBe(false);
+        vi.useRealTimers();
     });
 });

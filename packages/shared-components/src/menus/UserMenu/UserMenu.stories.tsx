@@ -30,6 +30,7 @@ const UserMenuWrapperImpl = (snapshot: UserMenuViewSnapshot): JSX.Element => {
         openHomePage: fn(),
         openSecurity: fn(),
         openSettings: fn(),
+        toggleSnooze: fn(),
         clearStatus: fn(),
     });
 

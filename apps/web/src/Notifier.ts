@@ -227,7 +227,7 @@ export default class Notifier extends TypedEventEmitter<keyof EmittedEvents, Emi
         if (!plaf || !cli) {
             return;
         }
-        if (!plaf.supportsNotifications() || !plaf.maySendNotifications()) {
+        if (!plaf.supportsNotifications() || !plaf.maySendNotifications() || this.isSnoozed()) {
             return;
         }
 
@@ -317,7 +317,7 @@ export default class Notifier extends TypedEventEmitter<keyof EmittedEvents, Emi
     // XXX: Exported for tests
     public async playAudioNotification(ev: MatrixEvent, room: Room): Promise<void> {
         const cli = this.sdkContext.client;
-        if (!cli || localNotificationsAreSilenced(cli)) {
+        if (!cli || localNotificationsAreSilenced(cli) || this.isSnoozed()) {
             return;
         }
 
@@ -431,6 +431,11 @@ export default class Notifier extends TypedEventEmitter<keyof EmittedEvents, Emi
         // set the notifications_hidden flag, as the user has knowingly interacted
         // with the setting we shouldn't nag them any further
         this.setPromptHidden(true);
+    }
+
+    /** Whether the user has snoozed notifications on this device (see the `/snooze` command). */
+    public isSnoozed(): boolean {
+        return Date.now() < SettingsStore.getValue("notificationsSnoozedUntil");
     }
 
     public isEnabled(): boolean {
@@ -636,7 +641,7 @@ export default class Notifier extends TypedEventEmitter<keyof EmittedEvents, Emi
             if (this.isEnabled()) {
                 this.displayPopupNotification(ev, room);
             }
-            if (actions.tweaks.sound && this.isAudioEnabled()) {
+            if (actions.tweaks.sound && this.isAudioEnabled() && !this.isSnoozed()) {
                 PlatformPeg.get()?.loudNotification(ev, room);
                 void this.playAudioNotification(ev, room);
             }

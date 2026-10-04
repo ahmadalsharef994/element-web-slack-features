@@ -3119,6 +3119,10 @@
         "server_error": "Server error",
         "server_error_detail": "Server unavailable, overloaded, or something else went wrong.",
         "shrug": "Prepends ¯\\_(ツ)_/¯ to a plain-text message",
+        "snooze": {
+            "description": "Pause notification pop-ups and sounds on this device (default 1 hour, or give minutes, hours like 2h, or off). New, added by Ahmad",
+            "invalid_args": "Use a number of minutes, hours like 2h, or off"
+        },
         "spoiler": "Sends the given message as a spoiler",
         "status": {
             "description": "Set your current status",

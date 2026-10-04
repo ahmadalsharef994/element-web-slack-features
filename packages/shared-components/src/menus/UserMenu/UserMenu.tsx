@@ -12,6 +12,8 @@ import {
     DevicesIcon,
     HomeIcon,
     LockIcon,
+    NotificationsIcon,
+    NotificationsOffIcon,
     SettingsIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 import classNames from "classnames";
@@ -58,6 +60,10 @@ export interface UserMenuViewSnapshot {
      */
     showUserStatus?: boolean;
     /**
+     * Whether notification pop-ups and sounds are snoozed on this device.
+     */
+    notificationsSnoozed?: boolean;
+    /**
      * ViewModel for the set status view.
      */
     setStatusViewModel: SetStatusViewModel;
@@ -72,6 +78,7 @@ export interface UserMenuViewSnapshot {
         openSecurity: boolean;
         openFeedback: boolean;
         openSettings: boolean;
+        snoozeNotifications: boolean;
     }>;
 }
 
@@ -109,6 +116,10 @@ export declare interface UserMenuViewActions {
      */
     openSettings: () => void;
     /**
+     * Called to snooze notifications for a while, or to resume them if they are snoozed.
+     */
+    toggleSnooze: () => void;
+    /**
      * Called when the user clicks the button to clear their status.
      */
     clearStatus: () => void;
@@ -133,6 +144,7 @@ export function UserMenuView({ vm, className }: UserMenuViewProps): JSX.Element 
         showAvatar,
         userStatus,
         setStatusViewModel,
+        notificationsSnoozed,
         showUserStatus = true,
     } = useViewModel(vm);
     const { translate: _t } = useI18n();
@@ -226,6 +238,18 @@ export function UserMenuView({ vm, className }: UserMenuViewProps): JSX.Element 
                             Icon={ChatProblemIcon}
                             label={_t("user_menu|open_feedback")}
                             onSelect={vm.openFeedback}
+                        />
+                    )}
+                    {actions.snoozeNotifications && (
+                        <MenuItem
+                            className={styles.addedByAhmad}
+                            Icon={notificationsSnoozed ? NotificationsIcon : NotificationsOffIcon}
+                            label={
+                                notificationsSnoozed
+                                    ? _t("user_menu|resume_notifications")
+                                    : _t("user_menu|snooze_notifications")
+                            }
+                            onSelect={vm.toggleSnooze}
                         />
                     )}
                     {actions.openSettings && (

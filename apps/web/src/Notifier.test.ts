@@ -597,6 +597,34 @@ describe("Notifier", () => {
         });
     });
 
+    describe("snooze", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("skips popups and sounds until the snooze ends", () => {
+            const snoozedUntil = Date.now() + 60_000;
+            vi.spyOn(SettingsStore, "getValue").mockImplementation((name: string): any =>
+                name === "notificationsSnoozedUntil" ? snoozedUntil : settingsStoreGetValue(name as any),
+            );
+            notifier.getSoundForRoom = vi.fn();
+
+            expect(notifier.isSnoozed()).toBe(true);
+            notifier.displayPopupNotification(testEvent, testRoom);
+            notifier.playAudioNotification(testEvent, testRoom);
+
+            expect(MockPlatform.displayNotification).not.toHaveBeenCalled();
+            expect(notifier.getSoundForRoom).not.toHaveBeenCalled();
+        });
+
+        it("is not snoozed once the time has passed", () => {
+            vi.spyOn(SettingsStore, "getValue").mockImplementation((name: string): any =>
+                name === "notificationsSnoozedUntil" ? Date.now() - 1 : settingsStoreGetValue(name as any),
+            );
+            expect(notifier.isSnoozed()).toBe(false);
+        });
+    });
+
     describe("_playAudioNotification", () => {
         const testCases: { event: IContent | undefined; count: number }[] = [
             { event: { is_silenced: true }, count: 0 },

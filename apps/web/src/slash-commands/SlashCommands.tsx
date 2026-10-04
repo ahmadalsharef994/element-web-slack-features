@@ -63,6 +63,7 @@ import { manuallyVerifyDevice } from "../components/views/dialogs/ManualDeviceKe
 import upgraderoom from "./upgraderoom/upgraderoom";
 import { emoticon } from "./emoticon";
 import { statusCommand } from "./status";
+import { snoozeCommand } from "./snooze";
 import { SDKContextClass } from "../contexts/SDKContextClass.ts";
 
 export { CommandCategories, Command };
@@ -825,6 +826,7 @@ export const Commands = [
         renderingTypes: [TimelineRenderingType.Room],
     }),
     statusCommand,
+    snoozeCommand,
 
     // Command definitions for autocompletion ONLY:
     // /me is special because its not handled by SlashCommands.js and is instead done inside the Composer classes

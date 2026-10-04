@@ -319,6 +319,7 @@ export interface Settings {
     "urlPreviewsEnabled_e2ee": IBaseSetting<boolean>;
     "urlPreviewsEnabled_e2ee_bundled_only": IBaseSetting<boolean>;
     "notificationsEnabled": IBaseSetting<boolean>;
+    "notificationsSnoozedUntil": IBaseSetting<number>;
     "deviceNotificationsEnabled": IBaseSetting<boolean>;
     "notificationSound": IBaseSetting<NotificationSound | false>;
     "notificationBodyEnabled": IBaseSetting<boolean>;
@@ -1204,6 +1205,11 @@ export const SETTINGS: Settings = {
         default: false,
         controller: new NotificationsEnabledController(),
         displayName: _td("settings|notifications|enable_desktop_notifications_session"),
+    },
+    "notificationsSnoozedUntil": {
+        // Timestamp in ms; notification pop-ups and sounds on this device are skipped until then
+        supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS,
+        default: 0,
     },
     "deviceNotificationsEnabled": {
         supportedLevels: [SettingLevel.DEVICE],

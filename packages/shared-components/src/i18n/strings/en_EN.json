@@ -391,7 +391,9 @@
         "open_feedback": "Feedback",
         "open_home": "Home",
         "open_security": "Security & Privacy",
-        "open_settings": "All settings"
+        "open_settings": "All settings",
+        "resume_notifications": "Resume notifications (new, added by Ahmad)",
+        "snooze_notifications": "Snooze notifications for 1 hour (new, added by Ahmad)"
     },
     "voip": {
         "element_call_mock": {
