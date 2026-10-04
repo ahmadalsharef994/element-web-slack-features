@@ -15,6 +15,7 @@ import {
     InlineCodeIcon,
     QuoteIcon,
     LinkIcon,
+    TextFormattingIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 
 import { _t } from "../../../languageHandler";
@@ -27,6 +28,7 @@ export enum Formatting {
     Strikethrough = "strikethrough",
     Code = "code",
     Quote = "quote",
+    Heading = "heading",
     InsertLink = "insert_link",
 }
 
@@ -70,6 +72,12 @@ export default class MessageComposerFormatBar extends React.PureComponent<IProps
                     onClick={() => this.props.onAction(Formatting.Italics)}
                     icon={<ItalicIcon />}
                     shortcut={this.props.shortcuts.italics}
+                />
+                <FormatButton
+                    label={_t("composer|format_heading")}
+                    onClick={() => this.props.onAction(Formatting.Heading)}
+                    icon={<TextFormattingIcon />}
+                    className="mx_AddedByAhmad_inline"
                 />
                 <FormatButton
                     label={_t("composer|format_strikethrough")}
@@ -120,6 +128,7 @@ interface IFormatButtonProps {
     label: string;
     icon: JSX.Element;
     shortcut?: string;
+    className?: string;
     onClick(): void;
 }
 
@@ -135,7 +144,7 @@ class FormatButton extends React.PureComponent<IFormatButtonProps> {
                 aria-label={this.props.label}
                 title={this.props.label}
                 caption={this.props.shortcut}
-                className="mx_MessageComposerFormatBar_button"
+                className={classNames("mx_MessageComposerFormatBar_button", this.props.className)}
             >
                 {this.props.icon}
             </RovingAccessibleButton>

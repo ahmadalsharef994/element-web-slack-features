@@ -604,6 +604,7 @@
         "format_bold": "Bold",
         "format_code_block": "Code block",
         "format_decrease_indent": "Indent decrease",
+        "format_heading": "Heading (new, added by Ahmad)",
         "format_increase_indent": "Indent increase",
         "format_inline_code": "Code",
         "format_insert_link": "Insert link",

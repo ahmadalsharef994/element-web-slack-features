@@ -28,19 +28,19 @@ describe("editor/operations: formatting operations", () => {
     const pc = createPartCreator();
 
     describe("formatRange", () => {
-        it.each([[Formatting.Bold, "hello **world**!"]])(
-            "should correctly wrap format %s",
-            (formatting: Formatting, expected: string) => {
-                const model = new EditorModel([pc.plain("hello world!")], pc, renderer);
+        it.each([
+            [Formatting.Bold, "hello **world**!"],
+            [Formatting.Strikethrough, "hello ~~world~~!"],
+        ])("should correctly wrap format %s", (formatting: Formatting, expected: string) => {
+            const model = new EditorModel([pc.plain("hello world!")], pc, renderer);
 
-                const range = model.startRange(model.positionForOffset(6, false), model.positionForOffset(11, false)); // around "world"
+            const range = model.startRange(model.positionForOffset(6, false), model.positionForOffset(11, false)); // around "world"
 
-                expect(range.parts[0].text).toBe("world");
-                expect(model.serializeParts()).toEqual([{ text: "hello world!", type: "plain" }]);
-                formatRange(range, formatting);
-                expect(model.serializeParts()).toEqual([{ text: expected, type: "plain" }]);
-            },
-        );
+            expect(range.parts[0].text).toBe("world");
+            expect(model.serializeParts()).toEqual([{ text: "hello world!", type: "plain" }]);
+            formatRange(range, formatting);
+            expect(model.serializeParts()).toEqual([{ text: expected, type: "plain" }]);
+        });
 
         it("should apply to word range is within if length 0", () => {
             const model = new EditorModel([pc.plain("hello world!")], pc, renderer);
@@ -61,6 +61,36 @@ describe("editor/operations: formatting operations", () => {
             expect(model.serializeParts()).toEqual([{ text: "hello world!", type: "plain" }]);
             formatRange(range, Formatting.Bold);
             expect(model.serializeParts()).toEqual([{ text: "hello world!", type: "plain" }]);
+        });
+    });
+
+    describe("formatRangeAsHeading", () => {
+        it("should add and remove a heading marker on a line", () => {
+            const model = new EditorModel([pc.plain("hello")], pc, renderer);
+            const range = model.startRange(model.positionForOffset(0, false), model.positionForOffset(5, false));
+            formatRange(range, Formatting.Heading);
+            expect(model.serializeParts()).toEqual([{ text: "# hello", type: "plain" }]);
+
+            const headed = model.startRange(model.positionForOffset(0, false), model.positionForOffset(7, false));
+            formatRange(headed, Formatting.Heading);
+            expect(
+                model
+                    .serializeParts()
+                    .map((p) => p.text)
+                    .join(""),
+            ).toBe("hello");
+        });
+
+        it("should add a heading marker to every selected line", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.plain("two")], pc, renderer);
+            const range = model.startRange(model.positionForOffset(0, false), model.positionForOffset(7, false));
+            formatRange(range, Formatting.Heading);
+            expect(
+                model
+                    .serializeParts()
+                    .map((p) => p.text)
+                    .join(""),
+            ).toBe("# one\n# two");
         });
     });
 

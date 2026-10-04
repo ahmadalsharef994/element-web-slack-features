@@ -175,6 +175,24 @@ describe("Markdown parser test", () => {
     });
 });
 
+describe("Markdown strikethrough", () => {
+    it.each([
+        ["~~gone~~", "<del>gone</del>"],
+        ["a ~~b~~ c ~~d~~", "a <del>b</del> c <del>d</del>"],
+        ["~~**bold**~~", "<del><strong>bold</strong></del>"],
+        ["~~unclosed", "~~unclosed"],
+        ["~~a~~ ~~b", "<del>a</del> ~~b"],
+        ["`~~code~~`", "<code>~~code~~</code>"],
+    ])("renders %s", (input, html) => {
+        expect(new Markdown(input).toHTML()).toEqual(html);
+    });
+
+    it("is not plain text", () => {
+        expect(new Markdown("~~gone~~").isPlainText()).toBe(false);
+        expect(new Markdown("~~unclosed").isPlainText()).toBe(true);
+    });
+});
+
 describe("Markdown soft breaks", () => {
     const wrapped = "First line\nsecond line\n\nNext paragraph";
 

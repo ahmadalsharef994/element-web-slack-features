@@ -43,13 +43,16 @@ export function formatRange(range: Range, action: Formatting): void {
             toggleInlineFormat(range, "*");
             break;
         case Formatting.Strikethrough:
-            toggleInlineFormat(range, "<del>", "</del>");
+            toggleInlineFormat(range, "~~");
             break;
         case Formatting.Code:
             formatRangeAsCode(range);
             break;
         case Formatting.Quote:
             formatRangeAsQuote(range);
+            break;
+        case Formatting.Heading:
+            formatRangeAsHeading(range);
             break;
         case Formatting.InsertLink:
             formatRangeAsLink(range);
@@ -170,6 +173,29 @@ export function formatRangeAsQuote(range: Range): void {
         parts.push(partCreator.newline());
     }
     parts.push(partCreator.newline());
+    replaceRangeAndExpandSelection(range, parts);
+}
+
+/** Adds a `# ` heading marker to every line in the range, or removes them if all lines already have one. */
+export function formatRangeAsHeading(range: Range): void {
+    const { model, parts } = range;
+    const { partCreator } = model;
+    const lineStarts = parts
+        .map((_, i) => i)
+        .filter((i) => parts[i].type !== Type.Newline && (i === 0 || parts[i - 1].type === Type.Newline));
+
+    if (lineStarts.every((i) => parts[i].text.startsWith("# "))) {
+        for (const i of lineStarts) {
+            const serialized = parts[i].serialize();
+            serialized.text = serialized.text.slice(2);
+            const part = partCreator.deserializePart(serialized);
+            if (part) parts[i] = part;
+        }
+    } else {
+        // Insert from the end so the earlier indexes stay valid
+        for (const i of lineStarts.reverse()) parts.splice(i, 0, partCreator.plain("# "));
+        if (!rangeStartsAtBeginningOfLine(range)) parts.unshift(partCreator.newline());
+    }
     replaceRangeAndExpandSelection(range, parts);
 }
 

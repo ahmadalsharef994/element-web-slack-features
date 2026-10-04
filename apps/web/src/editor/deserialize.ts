@@ -21,7 +21,7 @@ const LIST_TYPES = ["UL", "OL", "LI"];
 
 // Escapes all markup in the given text
 function escape(text: string): string {
-    return text.replace(/[\\*_[\]`<]|^>/g, (match) => `\\${match}`);
+    return text.replace(/[\\*_[\]`<~]|^>/g, (match) => `\\${match}`);
 }
 
 /**
@@ -205,9 +205,9 @@ function parseNode(n: Node, pc: PartCreator, opts: IParseOptions, mkListItem?: (
                 case "STRONG":
                     return [pc.plain("**"), ...parseChildren(n, pc, opts), pc.plain("**")];
                 case "DEL":
-                    return [pc.plain("<del>"), ...parseChildren(n, pc, opts), pc.plain("</del>")];
+                    return [pc.plain("~~"), ...parseChildren(n, pc, opts), pc.plain("~~")];
                 case "S":
-                    return [pc.plain("<s>"), ...parseChildren(n, pc, opts), pc.plain("</s>")];
+                    return [pc.plain("~~"), ...parseChildren(n, pc, opts), pc.plain("~~")];
                 case "SUB":
                     return [pc.plain("<sub>"), ...parseChildren(n, pc, opts), pc.plain("</sub>")];
                 case "SUP":

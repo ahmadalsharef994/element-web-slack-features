@@ -3,7 +3,7 @@
 exports[`editor/deserialize > html messages > escapes angle brackets 1`] = `
 [
   {
-    "text": "\\> \\\\<del>no formatting here\\\\</del>",
+    "text": "\\> \\\\~~no formatting here\\\\~~",
     "type": "plain",
   },
 ]

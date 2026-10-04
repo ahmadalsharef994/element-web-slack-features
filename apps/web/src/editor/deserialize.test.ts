@@ -107,6 +107,7 @@ describe("editor/deserialize", function () {
         it.each([
             ["**bold**", "\\*\\*bold\\*\\*"],
             ["a<del>b</del>c", "a\\<del>b\\</del>c"],
+            ["~~struck~~", "\\~\\~struck\\~\\~"],
             ["> quoted", "\\> quoted"],
             ["C:\\Program Files", "C:\\\\Program Files"],
         ])("still escapes %s, which markdown would have consumed", function (body, expected) {

@@ -122,6 +122,58 @@ export default class Markdown {
         const parser = new commonmark.Parser();
         this.parsed = parser.parse(this.input);
         this.parsed = this.repairLinks(this.parsed);
+        this.parsed = this.repairStrikethrough(this.parsed);
+    }
+
+    /**
+     * Turns `~~text~~` into `<del>text</del>`, since commonmark has no strikethrough.
+     * Markers are paired per parent node in order, so `~~**bold**~~` works. A marker with no
+     * partner stays as literal text. The `<del>` tags are allowed html, so they need no other handling.
+     */
+    private repairStrikethrough(parsed: commonmark.Node): commonmark.Node {
+        const walker = parsed.walker();
+        const textNodesByParent = new Map<commonmark.Node, commonmark.Node[]>();
+        let event: commonmark.NodeWalkingStep | null;
+        while ((event = walker.next())) {
+            const { node } = event;
+            if (event.entering && node.type === "text" && node.parent && node.literal?.includes("~~")) {
+                const siblings = textNodesByParent.get(node.parent) ?? [];
+                siblings.push(node);
+                textNodesByParent.set(node.parent, siblings);
+            }
+        }
+
+        for (const nodes of textNodesByParent.values()) {
+            const markerCount = nodes.reduce((count, node) => count + node.literal!.split("~~").length - 1, 0);
+            // Ignore the last marker if it has no partner
+            let remaining = markerCount - (markerCount % 2);
+            let open = false;
+            for (const node of nodes) {
+                const pieces = node.literal!.split("~~");
+                let anchor = node;
+                node.literal = pieces[0];
+                pieces.slice(1).forEach((piece, i) => {
+                    let next: commonmark.Node;
+                    if (remaining > 0) {
+                        remaining--;
+                        next = new commonmark.Node("html_inline");
+                        next.literal = open ? "</del>" : "<del>";
+                        open = !open;
+                        anchor.insertAfter(next);
+                        anchor = next;
+                        next = new commonmark.Node("text");
+                        next.literal = piece;
+                    } else {
+                        // Unpaired marker: keep it as text
+                        next = new commonmark.Node("text");
+                        next.literal = "~~" + piece;
+                    }
+                    anchor.insertAfter(next);
+                    anchor = next;
+                });
+            }
+        }
+        return parsed;
     }
 
     /**
