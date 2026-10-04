@@ -2,7 +2,7 @@
 
 ## Checklist
 
-- [ ] I have read through [review guidelines](https://github.com/element-hq/element-web/blob/develop/docs/review.md) and [CONTRIBUTING.md](https://github.com/element-hq/element-web/blob/develop/CONTRIBUTING.md).
+- [ ] I have read through [CONTRIBUTING.md](https://github.com/element-hq/element-web/blob/develop/CONTRIBUTING.md).
 - [ ] I have linked the PR to an issue that describes what needs changing.
 - [ ] I have written tests for new code (and old code if feasible).
 - [ ] I have ensured new or updated `public`/`exported` symbols have accurate [TSDoc](https://tsdoc.org/) documentation.

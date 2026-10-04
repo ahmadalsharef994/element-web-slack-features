@@ -83,14 +83,7 @@ The [configuration docs](docs/config.md#desktop-app-configuration) show how to o
 Please read through the following:
 
 1. [Developer guide](./developer_guide.md)
-2. [Code style](./code_style.md)
-3. [Contribution guide](./CONTRIBUTING.md)
-
-# Translations
-
-To add a new translation, head to the [translating doc](docs/translating.md).
-
-For a developer guide, see the [translating dev doc](docs/translating-dev.md).
+2. [Contribution guide](./CONTRIBUTING.md)
 
 # Triaging issues
 

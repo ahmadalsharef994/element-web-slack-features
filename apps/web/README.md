@@ -115,8 +115,7 @@ Dockerfile.
 Please read through the following:
 
 1. [Developer guide](../../developer_guide.md)
-2. [Code style](../../code_style.md)
-3. [Contribution guide](../../CONTRIBUTING.md)
+2. [Contribution guide](../../CONTRIBUTING.md)
 
 # Extending Element Web with Modules
 

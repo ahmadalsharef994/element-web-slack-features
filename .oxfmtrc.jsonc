@@ -38,7 +38,6 @@
         "package-lock.json",
         // This file is generated
         "CHANGELOG.md",
-        "/docs/changelogs",
         // Legacy skinning file that some people might still have,
         "/apps/web/src/component-index.js",
         // Downloaded and already minified,

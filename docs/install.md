@@ -111,4 +111,3 @@ docker build -t \
 ## Kubernetes
 
 The provided element-web docker image can also be run from within a Kubernetes cluster.
-See the [Kubernetes example](kubernetes.md) for more details.

@@ -130,10 +130,7 @@ These are located in `/spec/` in `matrix-js-sdk` or alongside the source file in
 When writing unit tests, please aim for a high level of test coverage
 for new code - 80% or greater. If you cannot achieve that, please document
 why it's not possible in your PR.
-CI will validate that the coverage reached on your change is sufficient,
-you can also assert this locally by installing https://github.com/Bachmann1234/diff_cover,
-running the entire test suite in coverage mode `pnpm coverage` then running
-`pnpm coverage:diff` to see the coverage of the diff between your HEAD and `develop`.
+CI will validate that the coverage reached on your change is sufficient.
 
 Some sections of code are not sensible to add coverage for, such as those
 which explicitly inhibit noisy logging for tests. Which can be hidden using
@@ -170,9 +167,6 @@ with the architecture of the SDK (index file becomes less clear) and could
 introduce naming problems (as default exports get aliased upon import). In
 general, avoid using `export default`.
 
-The remaining code style is documented in [code_style.md](./code_style.md).
-Contributors are encouraged to it and follow the principles set out there.
-
 Please ensure your changes match the cosmetic style of the existing project,
 and **_never_** mix cosmetic and functional changes in the same commit, as it
 makes it horribly hard to review otherwise.
@@ -186,16 +180,6 @@ When creating new UI components, consider whether they should be added to the sh
 - Follow established patterns and don't have tight coupling to specific application logic
 
 For more details, see the [shared components README](./packages/shared-components/README.md).
-
-## Attribution
-
-Everyone who contributes anything to Matrix is welcome to be listed in the
-AUTHORS.rst file for the project in question. Please feel free to include a
-change to AUTHORS.rst in your pull request to list yourself and a short
-description of the area(s) you've worked on. Also, we sometimes have swag to
-give away to contributors - if you feel that Matrix-branded apparel is missing
-from your life, please mail us your shipping address to matrix at matrix.org
-and we'll try to fix it :)
 
 # Review expectations
 

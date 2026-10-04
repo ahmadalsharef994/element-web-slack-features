@@ -327,8 +327,6 @@ Currently, Element uses Jitsi to offer conference calls in rooms, with an experi
 A set of defaults are applied, pointing at our Jitsi and Element Call instances, to ensure conference calling works, however you
 can point Element at your own if you prefer.
 
-More information about the Jitsi setup can be found [here](./jitsi.md).
-
 The VoIP and Jitsi options are:
 
 1. `jitsi`: Optional configuration for how to start Jitsi conferences. Currently can only contain a single `preferred_domain`

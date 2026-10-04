@@ -34,7 +34,6 @@ function customPathResolver(href: string, currentPath: string): string {
 export default withMermaid({
     title: "Element Web & Desktop docs",
     description: "Documentation",
-    srcExclude: ["changelogs"],
     markdown: {
         config: (md) => {
             // Custom rule to fix links
@@ -75,16 +74,12 @@ export default withMermaid({
                 items: [
                     { text: "Introduction", link: "/index" },
                     { text: "Element Web", link: "/readme-element-web" },
-                    { text: "Element Desktop", link: "/readme-element-desktop" },
                     { text: "Shared Components", link: "/readme-shared-components" },
                 ],
             },
             {
                 text: "Usage",
-                items: [
-                    { text: "Betas", link: "/betas" },
-                    { text: "Labs", link: "/labs" },
-                ],
+                items: [{ text: "Labs", link: "/labs" }],
             },
             {
                 text: "Setup",
@@ -92,8 +87,6 @@ export default withMermaid({
                     { text: "Install", link: "/install" },
                     { text: "Config", link: "/config" },
                     { text: "Custom home page", link: "/custom-home" },
-                    { text: "Kubernetes", link: "/kubernetes" },
-                    { text: "Jitsi", link: "/jitsi" },
                     { text: "Encryption", link: "/e2ee" },
                 ],
             },
@@ -104,9 +97,7 @@ export default withMermaid({
                         text: "Desktop",
                         items: [
                             { text: "Native Node modules", link: "/native-node-modules" },
-                            { text: "Windows requirements", link: "/windows-requirements" },
                             { text: "Debugging", link: "/debugging" },
-                            { text: "Using gdb", link: "/gdb" },
                         ],
                     },
                 ],
@@ -119,26 +110,14 @@ export default withMermaid({
                 ],
             },
             {
-                text: "Contribution",
-                items: [
-                    { text: "Choosing an issue", link: "/choosing-an-issue" },
-                    { text: "Translation", link: "/translating" },
-                    { text: "Netlify builds", link: "/pr-previews" },
-                    { text: "Code review", link: "/review" },
-                ],
-            },
-            {
                 text: "Development",
                 items: [
                     { text: "App load order", link: "/app-load.md" },
-                    { text: "Translation", link: "/translating-dev.md" },
                     { text: "Theming", link: "/theming.md" },
                     { text: "Playwright end to end tests", link: "/playwright.md" },
                     { text: "Memory profiling", link: "/memory-profiles-and-leaks.md" },
-                    { text: "Jitsi", link: "/jitsi-dev.md" },
                     { text: "Feature flags", link: "/feature-flags.md" },
                     { text: "OAuth and delegated authentication", link: "/oauth.md" },
-                    { text: "Release Process", link: "/release.md" },
                     { text: "MVVM", link: "/MVVM.md" },
                     { text: "Settings", link: "/settings.md" },
                 ],
@@ -155,7 +134,6 @@ export default withMermaid({
                     { text: "Scrolling", link: "/scrolling" },
                     { text: "Usercontent", link: "/usercontent" },
                     { text: "Widget layouts", link: "/widget-layouts" },
-                    { text: "Automations", link: "/generated/automations" },
                 ],
             },
         ],

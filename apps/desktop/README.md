@@ -136,12 +136,6 @@ You may also specify a different path entirely for the `config.json` file by
 providing the `--config $YOUR_CONFIG_JSON_FILE` to the process, or via the
 `ELEMENT_DESKTOP_CONFIG_JSON` environment variable.
 
-# Translations
-
-To add a new translation, head to the [translating doc](https://github.com/vector-im/element-web/blob/develop/docs/translating.md).
-
-For a developer guide, see the [translating dev doc](https://github.com/vector-im/element-web/blob/develop/docs/translating-dev.md).
-
 # Report bugs & give feedback
 
 If you run into any bugs or have feedback you'd like to share, please let us know on GitHub.
