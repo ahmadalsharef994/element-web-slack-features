@@ -1,0 +1,27 @@
+/*
+Copyright 2026 Ahmad
+
+SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+*/
+
+/* Marks features added by Ahmad: a highlighted block with a note under it */
+.mx_AddedByAhmad {
+    padding-inline-start: var(--cpd-space-3x);
+    border-inline-start: var(--cpd-space-1x) solid var(--cpd-color-bg-accent-rest);
+    border-radius: var(--cpd-space-1x);
+    background-color: var(--cpd-color-bg-subtle-secondary);
+
+    &::after {
+        content: "New · added by Ahmad";
+        display: block;
+        font: var(--cpd-font-body-xs-regular);
+        color: var(--cpd-color-text-action-accent);
+    }
+}
+
+/* For small controls with no room for a note: highlight only (the tooltip carries the note) */
+.mx_AddedByAhmad_inline {
+    outline: 2px solid var(--cpd-color-bg-accent-rest);
+    border-radius: var(--cpd-space-1x);
+}
