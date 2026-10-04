@@ -7,11 +7,12 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import React, { useCallback, type JSX } from "react";
+import React, { useCallback, useState, type JSX } from "react";
 
 import { _t } from "../../../languageHandler";
 import BaseDialog from "./BaseDialog";
 import DialogButtons from "../elements/DialogButtons";
+import Field from "../elements/Field";
 import { fileSize } from "../../../utils/FileUtils";
 import {
     attachmentIcon,
@@ -28,7 +29,8 @@ interface IProps {
     currentIndex?: number;
     /** Defaults to 1. */
     totalFiles?: number;
-    onFinished: (uploadConfirmed: boolean, uploadAll?: boolean) => void;
+    /** `caption` is the text to send with the file, if any. */
+    onFinished: (uploadConfirmed: boolean, uploadAll?: boolean, caption?: string) => void;
 }
 
 const previewableFormats = ["video", "audio", "image"];
@@ -119,13 +121,25 @@ export default function UploadConfirmDialog({
         onFinished(false);
     }, [onFinished]);
 
+    const [caption, setCaption] = useState("");
+
     const onUploadClick = useCallback((): void => {
-        onFinished(true);
-    }, [onFinished]);
+        onFinished(true, false, caption.trim() || undefined);
+    }, [onFinished, caption]);
 
     const onUploadAllClick = useCallback((): void => {
-        onFinished(true, true);
-    }, [onFinished]);
+        onFinished(true, true, caption.trim() || undefined);
+    }, [onFinished, caption]);
+
+    const onCaptionKeyDown = useCallback(
+        (e: React.KeyboardEvent): void => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                onUploadClick();
+            }
+        },
+        [onUploadClick],
+    );
 
     let uploadAllButton: JSX.Element | undefined;
     if (currentIndex + 1 < totalFiles) {
@@ -150,6 +164,14 @@ export default function UploadConfirmDialog({
                         <MediaPreviewGroupPreview vm={vm} />
                     </div>
                 </div>
+                <Field
+                    className="mx_UploadConfirmDialog_caption mx_AddedByAhmad"
+                    label={_t("upload_file|caption_label")}
+                    value={caption}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCaption(e.target.value)}
+                    onKeyDown={onCaptionKeyDown}
+                    autoComplete="off"
+                />
             </div>
 
             <DialogButtons

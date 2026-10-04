@@ -498,6 +498,8 @@ export default class ContentMessages {
         for (let i = 0; i < okFiles.length; ++i) {
             const file = okFiles[i];
             const loopPromiseBefore = promBefore;
+            // Per iteration, because the send below runs after the loop has moved on
+            let caption: string | undefined;
 
             if (!uploadAll) {
                 const { finished } = Modal.createDialog(UploadConfirmDialog, {
@@ -505,8 +507,9 @@ export default class ContentMessages {
                     currentIndex: i,
                     totalFiles: okFiles.length,
                 });
-                const [shouldContinue, shouldUploadAll] = await finished;
+                const [shouldContinue, shouldUploadAll, uploadCaption] = await finished;
                 if (!shouldContinue) break;
+                caption = uploadCaption;
                 if (shouldUploadAll) {
                     uploadAll = true;
                 }
@@ -523,6 +526,7 @@ export default class ContentMessages {
                         matrixClient,
                         replyToEvent ?? undefined,
                         loopPromiseBefore,
+                        caption,
                     ),
                 matrixClient,
             );
@@ -591,10 +595,13 @@ export default class ContentMessages {
         matrixClient: MatrixClient,
         replyToEvent: MatrixEvent | undefined,
         promBefore?: Promise<any>,
+        caption?: string,
     ): Promise<void> {
         const fileName = file.name || _t("common|attachment");
         const content: Omit<MediaEventContent, "info"> & { info: Partial<MediaEventInfo> } = {
-            body: fileName,
+            // A caption goes in `body` and the file name moves to `filename` (MSC2530)
+            body: caption || fileName,
+            ...(caption ? { filename: fileName } : {}),
             info: {
                 size: file.size,
             },

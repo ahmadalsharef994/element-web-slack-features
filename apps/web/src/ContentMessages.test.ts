@@ -123,6 +123,26 @@ describe("ContentMessages", () => {
             );
         });
 
+        it("should send a caption as the body and keep the file name in filename", async () => {
+            vi.mocked(client.uploadContent).mockResolvedValue({ content_uri: "mxc://server/file" });
+            const file = new File([], "fileName", { type: "image/jpeg" });
+            await contentMessages.sendContentToRoom(file, roomId, undefined, client, undefined, undefined, "a caption");
+            expect(client.sendMessage).toHaveBeenCalledWith(
+                roomId,
+                null,
+                expect.objectContaining({ msgtype: "m.image", body: "a caption", filename: "fileName" }),
+            );
+        });
+
+        it("should not set filename when there is no caption", async () => {
+            vi.mocked(client.uploadContent).mockResolvedValue({ content_uri: "mxc://server/file" });
+            const file = new File([], "fileName", { type: "image/jpeg" });
+            await contentMessages.sendContentToRoom(file, roomId, undefined, client, undefined);
+            const content = vi.mocked(client.sendMessage).mock.calls[0][2];
+            expect(content.body).toBe("fileName");
+            expect(content).not.toHaveProperty("filename");
+        });
+
         it("should use m.image for PNG files which cannot be parsed but successfully thumbnail", async () => {
             vi.mocked(client.uploadContent).mockResolvedValue({ content_uri: "mxc://server/file" });
             const file = new File([], "fileName", { type: "image/png" });

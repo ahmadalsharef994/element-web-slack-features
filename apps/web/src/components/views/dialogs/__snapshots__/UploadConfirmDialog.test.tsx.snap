@@ -90,6 +90,23 @@ exports[`<UploadConfirmDialog /> > should display image preview 1`] = `
           </div>
         </div>
       </div>
+      <div
+        class="mx_Field mx_Field_input mx_UploadConfirmDialog_caption"
+      >
+        <input
+          autocomplete="off"
+          id="mx_Field_1"
+          label="Add a caption (optional)"
+          placeholder="Add a caption (optional)"
+          type="text"
+          value=""
+        />
+        <label
+          for="mx_Field_1"
+        >
+          Add a caption (optional)
+        </label>
+      </div>
     </div>
     <div
       class="mx_Dialog_buttons"
