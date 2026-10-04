@@ -37,6 +37,7 @@ import { isValid3pidInvite } from "../../../RoomInvite";
 import { type ThreePIDInvite } from "../../../models/rooms/ThreePIDInvite";
 import { type XOR } from "../../../@types/common";
 import { useTypedEventEmitter } from "../../../hooks/useEventEmitter";
+import { useSettingValue } from "../../../hooks/useSettings";
 import { useRoomMemberCount } from "../../../hooks/useRoomMembers";
 
 type Member = XOR<{ member: RoomMember }, { threePidInvite: ThreePIDInvite }>;
@@ -183,9 +184,10 @@ export function useMemberListViewModel(roomId: string): MemberListViewState {
         [sdkContext.memberListStore, roomId, room, memberCountWithout3Pid],
     );
 
+    const showPresenceSetting = useSettingValue("showPresence");
     const isPresenceEnabled = useMemo(
-        () => sdkContext.memberListStore.isPresenceEnabled(),
-        [sdkContext.memberListStore],
+        () => showPresenceSetting && sdkContext.memberListStore.isPresenceEnabled(),
+        [sdkContext.memberListStore, showPresenceSetting],
     );
 
     // Determines whether the rendered invite button is enabled or disabled

@@ -20,6 +20,7 @@ import { isPresenceEnabled } from "../../../utils/presence";
 import DMRoomMap from "../../../utils/DMRoomMap";
 import { getJoinedNonFunctionalMembers } from "../../../utils/room/getJoinedNonFunctionalMembers";
 import { useEventEmitter } from "../../../hooks/useEventEmitter";
+import { useSettingValue } from "../../../hooks/useSettings";
 import { BUSY_PRESENCE_NAME } from "../rooms/PresenceLabel";
 import AvatarPresenceIconView from "../rooms/MemberList/tiles/common/PresenceIconView";
 
@@ -97,6 +98,8 @@ export const usePresence = (room: Room, member: RoomMember | null): Presence | n
         if (user?.userId === member?.userId) updatePresence();
     });
     useEffect(updatePresence, [room, member]);
+    // Re-render when the user turns presence on or off; `isPresenceEnabled` reads the current value
+    useSettingValue("showPresence");
 
     if (getJoinedNonFunctionalMembers(room).length !== 2 || !isPresenceEnabled(room.client)) return null;
     return presence;

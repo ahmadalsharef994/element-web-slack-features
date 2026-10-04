@@ -16,6 +16,7 @@ import dis from "./dispatcher/dispatcher";
 import Timer from "./utils/Timer";
 import { type ActionPayload } from "./dispatcher/payloads";
 import { Action } from "./dispatcher/actions.ts";
+import SettingsStore from "./settings/SettingsStore";
 
 // Time in ms after that a user is considered as unavailable/away
 const UNAVAILABLE_TIME_MS = 3 * 60 * 1000; // 3 mins
@@ -24,6 +25,7 @@ class Presence {
     private unavailableTimer?: Timer;
     private dispatcherRef?: string;
     private state?: SetPresence;
+    private settingWatcherRef?: string;
 
     /**
      * Start listening the user activity to evaluate his presence state.
@@ -33,6 +35,7 @@ class Presence {
         this.unavailableTimer = new Timer(UNAVAILABLE_TIME_MS);
         // the user_activity_start action starts the timer
         this.dispatcherRef = dis.register(this.onAction);
+        this.settingWatcherRef = SettingsStore.watchSetting("sharePresence", null, this.onSharePresenceChanged);
         while (this.unavailableTimer) {
             try {
                 await this.unavailableTimer.finished();
@@ -49,6 +52,8 @@ class Presence {
     public stop(): void {
         dis.unregister(this.dispatcherRef);
         this.dispatcherRef = undefined;
+        SettingsStore.unwatchSetting(this.settingWatcherRef);
+        this.settingWatcherRef = undefined;
         this.unavailableTimer?.abort();
         this.unavailableTimer = undefined;
     }
@@ -60,6 +65,13 @@ class Presence {
     public getState(): SetPresence | null {
         return this.state ?? null;
     }
+
+    private onSharePresenceChanged = (): void => {
+        // Send the new state straight away instead of waiting for the next activity.
+        // `setState` turns this into Offline when sharing was just switched off.
+        this.state = undefined;
+        void this.setState(SetPresence.Online);
+    };
 
     private onAction = (payload: ActionPayload): void => {
         if (payload.action === Action.UserActivity) {
@@ -73,7 +85,9 @@ class Presence {
      * If the state has changed, the homeserver will be notified.
      * @param {string} newState the new presence state (see PRESENCE enum)
      */
-    private async setState(newState: SetPresence): Promise<void> {
+    private async setState(requestedState: SetPresence): Promise<void> {
+        // Always appear offline when the user has chosen not to share their presence
+        const newState = SettingsStore.getValue("sharePresence") ? requestedState : SetPresence.Offline;
         if (newState === this.state) {
             return;
         }

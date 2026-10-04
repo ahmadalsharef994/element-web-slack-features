@@ -275,6 +275,8 @@ export interface Settings {
     "TextualBody.enableBigEmoji": IBaseSetting<boolean>;
     "sendTypingNotifications": IBaseSetting<boolean>;
     "showTypingNotifications": IBaseSetting<boolean>;
+    "sharePresence": IBaseSetting<boolean>;
+    "showPresence": IBaseSetting<boolean>;
     "ctrlFForSearch": IBaseSetting<boolean>;
     "MessageComposerInput.ctrlEnterToSend": IBaseSetting<boolean>;
     "MessageComposerInput.surroundWith": IBaseSetting<boolean>;
@@ -932,6 +934,16 @@ export const SETTINGS: Settings = {
     "showTypingNotifications": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("settings|show_typing_notifications"),
+        default: true,
+    },
+    "sharePresence": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("settings|share_presence"),
+        default: true,
+    },
+    "showPresence": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("settings|show_presence"),
         default: true,
     },
     "ctrlFForSearch": {

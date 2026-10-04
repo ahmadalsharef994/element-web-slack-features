@@ -121,7 +121,15 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
     private static KEYBINDINGS_SETTINGS: BooleanSettingKey[] = ["ctrlFForSearch"];
 
-    private static PRESENCE_SETTINGS: BooleanSettingKey[] = ["sendReadReceipts", "sendTypingNotifications"];
+    /** Settings added by Ahmad, highlighted in the list */
+    private static ADDED_BY_AHMAD: BooleanSettingKey[] = ["sharePresence", "showPresence"];
+
+    private static PRESENCE_SETTINGS: BooleanSettingKey[] = [
+        "sendReadReceipts",
+        "sendTypingNotifications",
+        "sharePresence",
+        "showPresence",
+    ];
 
     private static COMPOSER_SETTINGS: BooleanSettingKey[] = [
         "MessageComposerInput.autoReplaceEmoji",
@@ -225,9 +233,15 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
     private renderGroup(settingIds: BooleanSettingKey[], level = SettingLevel.ACCOUNT): JSX.Element {
         return (
             <>
-                {settingIds.map((i) => (
-                    <SettingsFlag key={i} name={i} level={level} />
-                ))}
+                {settingIds.map((i) =>
+                    PreferencesUserSettingsTab.ADDED_BY_AHMAD.includes(i) ? (
+                        <div key={i} className="mx_AddedByAhmad">
+                            <SettingsFlag name={i} level={level} />
+                        </div>
+                    ) : (
+                        <SettingsFlag key={i} name={i} level={level} />
+                    ),
+                )}
             </>
         );
     }

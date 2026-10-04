@@ -9,8 +9,11 @@ Please see LICENSE files in the repository root for full details.
 import { type MatrixClient } from "matrix-js-sdk/src/matrix";
 
 import SdkConfig from "../SdkConfig";
+import SettingsStore from "../settings/SettingsStore";
 
+/** Whether to show other people's presence: not disabled by config for this homeserver or by the user's setting. */
 export function isPresenceEnabled(matrixClient: MatrixClient): boolean {
+    if (!SettingsStore.getValue("showPresence")) return false;
     const hsUrl = matrixClient.baseUrl;
     const urls = SdkConfig.get("enable_presence_by_hs_url");
     if (!urls) return true;

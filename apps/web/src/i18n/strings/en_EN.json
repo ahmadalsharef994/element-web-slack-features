@@ -2970,6 +2970,7 @@
             "verify_session": "Verify session",
             "web_session": "Web session"
         },
+        "share_presence": "Share my online status",
         "show_avatar_changes": "Show profile picture changes",
         "show_breadcrumbs": "Show shortcuts to recently viewed rooms above the room list",
         "show_chat_effects": "Show chat effects (animations when receiving e.g. confetti)",
@@ -2978,6 +2979,7 @@
         "show_message_previews": "Show message previews",
         "show_nsfw_content": "Show NSFW content",
         "show_people_sections": "Show People as a section",
+        "show_presence": "Show other people's online status",
         "show_read_receipts": "Show read receipts sent by other users",
         "show_redaction_placeholder": "Show a placeholder for removed messages",
         "show_sections": "Show sections",
