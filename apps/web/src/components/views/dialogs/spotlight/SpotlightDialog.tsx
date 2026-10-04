@@ -99,6 +99,8 @@ import { Filter } from "./Filter";
 
 const MAX_RECENT_SEARCHES = 10;
 const SECTION_LIMIT = 50; // only show 50 results per section for performance reasons
+/** How many people and public rooms to show per section when searching everything at once */
+const UNIFIED_SECTION_LIMIT = 5;
 const AVATAR_SIZE = "24px";
 
 interface IProps {
@@ -109,6 +111,15 @@ interface IProps {
 
 function nodeIsForRecentlyViewed(node?: HTMLElement): boolean {
     return node?.id?.startsWith("mx_SpotlightDialog_button_recentlyViewed_") === true;
+}
+
+/**
+ * "alice@server.org" or "alice:server.org" with no leading "@" is most likely a Matrix ID,
+ * so try it as one. Returns undefined for anything else.
+ */
+function guessUserId(query: string): string | undefined {
+    const match = /^([^@:\s]+)[@:]([^@:\s]+\.[^@:\s]+(?::\d+)?)$/.exec(query);
+    return match ? `@${match[1]}:${match[2]}` : undefined;
 }
 
 function getRoomTypes(filter: Filter | null): Set<RoomType | null> {
@@ -374,13 +385,19 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         ],
         [trimmedQuery, filter],
     );
+    const profileSearchParams: [IDirectoryOpts] = useMemo(
+        () => [{ ...searchParams[0], query: guessUserId(trimmedQuery) ?? trimmedQuery }],
+        [searchParams, trimmedQuery],
+    );
+    // With no filter chosen, search everything at once so the user does not have to say what they are looking for
+    const searchEverything = filter === null && trimmedQuery.length >= 2;
     useDebouncedCallback(
-        filter === Filter.PublicRooms || filter === Filter.PublicSpaces,
+        filter === Filter.PublicRooms || filter === Filter.PublicSpaces || searchEverything,
         searchPublicRooms,
         searchParams,
     );
-    useDebouncedCallback(filter === Filter.People, searchPeople, searchParams);
-    useDebouncedCallback(filter === Filter.People, searchProfileInfo, searchParams);
+    useDebouncedCallback(filter === Filter.People || searchEverything, searchPeople, searchParams);
+    useDebouncedCallback(filter === Filter.People || searchEverything, searchProfileInfo, profileSearchParams);
 
     const possibleResults = useMemo<Result[]>(() => {
         const visibleRooms = findVisibleRooms(cli, msc3946ProcessDynamicPredecessor);
@@ -817,15 +834,21 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         }
 
         let suggestionsSection: JSX.Element | undefined;
-        if (results[Section.Suggestions].length && filter === Filter.People) {
+        if (results[Section.Suggestions].length && (filter === Filter.People || filter === null)) {
             suggestionsSection = (
                 <div
                     className="mx_SpotlightDialog_section mx_SpotlightDialog_results"
                     role="group"
                     aria-labelledby="mx_SpotlightDialog_section_suggestions"
                 >
-                    <h4 id="mx_SpotlightDialog_section_suggestions">{_t("common|suggestions")}</h4>
-                    <div>{results[Section.Suggestions].slice(0, SECTION_LIMIT).map(resultMapper)}</div>
+                    <h4 id="mx_SpotlightDialog_section_suggestions">
+                        {filter === null ? filterToLabel(Filter.People) : _t("common|suggestions")}
+                    </h4>
+                    <div>
+                        {results[Section.Suggestions]
+                            .slice(0, filter === null ? UNIFIED_SECTION_LIMIT : SECTION_LIMIT)
+                            .map(resultMapper)}
+                    </div>
                 </div>
             );
         }
@@ -886,6 +909,20 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                         </div>
                     </div>
                     <div>{content}</div>
+                </div>
+            );
+        }
+
+        let unifiedPublicRoomsSection: JSX.Element | undefined;
+        if (filter === null && results[Section.PublicRoomsAndSpaces].length) {
+            unifiedPublicRoomsSection = (
+                <div
+                    className="mx_SpotlightDialog_section mx_SpotlightDialog_results"
+                    role="group"
+                    aria-labelledby="mx_SpotlightDialog_section_unifiedPublicRooms"
+                >
+                    <h4 id="mx_SpotlightDialog_section_unifiedPublicRooms">{filterToLabel(Filter.PublicRooms)}</h4>
+                    <div>{results[Section.PublicRoomsAndSpaces].slice(0, UNIFIED_SECTION_LIMIT).map(resultMapper)}</div>
                 </div>
             );
         }
@@ -1047,7 +1084,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         let noResultsSection: JSX.Element | undefined;
         const hasResults =
             !!results[Section.People].length ||
-            (filter === Filter.People && !!results[Section.Suggestions].length) ||
+            ((filter === Filter.People || filter === null) && !!results[Section.Suggestions].length) ||
             !!results[Section.Rooms].length ||
             !!results[Section.Spaces].length ||
             !!results[Section.PublicRoomsAndSpaces].length ||
@@ -1071,6 +1108,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                 {roomsSection}
                 {spacesSection}
                 {spaceRoomsSection}
+                {unifiedPublicRoomsSection}
                 {publicRoomsSection}
                 {joinRoomSection}
                 {hiddenResultsSection}

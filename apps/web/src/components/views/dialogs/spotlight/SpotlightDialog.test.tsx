@@ -183,6 +183,48 @@ describe("Spotlight Dialog", () => {
         vi.mocked(mockedClient.getVisibleRooms).mockReturnValue([testRoom, testLocalRoom, testDM]);
     });
 
+    describe("searching everything without a filter", () => {
+        it("should find people from the directory without choosing the People filter", async () => {
+            render(<SpotlightDialog initialText="Jane" onFinished={() => null} />);
+            vi.advanceTimersByTime(200);
+            await flushPromisesWithFakeTimers();
+
+            await waitFor(() => expect(screen.getByText("Jane Doe")).toBeInTheDocument());
+            expect(screen.queryByText("No results found")).not.toBeInTheDocument();
+        });
+
+        it("should find public rooms without choosing the Public rooms filter", async () => {
+            render(<SpotlightDialog initialText="Room #247" onFinished={() => null} />);
+            vi.advanceTimersByTime(200);
+            await flushPromisesWithFakeTimers();
+
+            await waitFor(() => expect(screen.getByText("Room #247")).toBeInTheDocument());
+        });
+
+        it("should look up 'name@server' as a Matrix ID", async () => {
+            const member = new RoomMember("!room:server", "@test_user:matrix.org");
+            member.name = member.rawDisplayName = "Test User";
+            member.getMxcAvatarUrl = vi.fn().mockReturnValue(undefined);
+            vi.mocked(mockedClient.getProfileInfo).mockResolvedValue({ displayname: "Test User" });
+
+            render(<SpotlightDialog initialText="test_user@matrix.org" onFinished={() => null} />);
+            vi.advanceTimersByTime(200);
+            await flushPromisesWithFakeTimers();
+
+            await waitFor(() => expect(mockedClient.getProfileInfo).toHaveBeenCalledWith("@test_user:matrix.org"));
+            await waitFor(() => expect(screen.getByText("Test User")).toBeInTheDocument());
+        });
+
+        it("should not search the server for a single character", async () => {
+            render(<SpotlightDialog initialText="j" onFinished={() => null} />);
+            vi.advanceTimersByTime(200);
+            await flushPromisesWithFakeTimers();
+
+            expect(mockedClient.searchUserDirectory).not.toHaveBeenCalled();
+            expect(mockedClient.publicRooms).not.toHaveBeenCalled();
+        });
+    });
+
     it("should not fall into a filter when the query matches nothing", async () => {
         render(<SpotlightDialog initialText="zzzznothingmatchesthis" onFinished={() => null} />);
 
