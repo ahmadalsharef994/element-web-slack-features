@@ -25,7 +25,7 @@ Run from the repo root unless stated otherwise.
 
 | Task                                                   | Command                                           |
 | ------------------------------------------------------ | ------------------------------------------------- |
-| Full lint (types, format, js, styles, workflows, knip) | `pnpm lint`                                       |
+| Full lint (types, format, js, styles, knip) | `pnpm lint`                                       |
 | Format                                                 | `pnpm lint:fmt:fix`                               |
 | Lint JS/TS                                             | `pnpm lint:js:fix`                                |
 | Typecheck                                              | `pnpm -r --workspace-concurrency=1 lint:types`    |

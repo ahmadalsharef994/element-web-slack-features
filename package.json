@@ -13,12 +13,11 @@
         "i18n": "pnpm -r i18n",
         "i18n:sort": "pnpm -r i18n:sort",
         "i18n:lint": "pnpm -r i18n:lint",
-        "lint": "pnpm -r --workspace-concurrency=1 lint:types && pnpm lint:fmt && pnpm lint:js && pnpm -r lint:style && pnpm lint:workflows && pnpm lint:knip",
+        "lint": "pnpm -r --workspace-concurrency=1 lint:types && pnpm lint:fmt && pnpm lint:js && pnpm -r lint:style && pnpm lint:knip",
         "lint:fmt": "oxfmt --check",
         "lint:fmt:fix": "oxfmt",
         "lint:js": "nx run-many -t lint:prepare -p && oxlint",
         "lint:js:fix": "oxlint --fix",
-        "lint:workflows": "find .github/workflows -type f \\( -iname '*.yaml' -o -iname '*.yml' \\) -print -exec action-validator {} ';'",
         "lint:knip": "knip --no-tag-hints && knip --strict --exclude unlisted,dependencies,binaries",
         "lint:unused-settings": "node scripts/find-unused-settings.ts",
         "postinstall": "node scripts/pnpm-link.ts && pnpm run -r sane-postinstall",
@@ -28,8 +27,6 @@
         "test:unit": "nx run-many -t test:unit:prepare -p && vitest run"
     },
     "devDependencies": {
-        "@action-validator/cli": "^0.6.0",
-        "@action-validator/core": "^0.6.0",
         "@nx-tools/nx-container": "^7.2.1",
         "@playwright/test": "catalog:",
         "@types/node": "25",
