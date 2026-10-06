@@ -9,8 +9,8 @@ Please see LICENSE files in the repository root for full details.
 // @vitest-environment happy-dom
 
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
-import { fireEvent, render, screen } from "test-utils-rtl";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
+import { act, fireEvent, render, screen } from "test-utils-rtl";
 import userEvent from "@testing-library/user-event";
 import { type MatrixClient, Room } from "matrix-js-sdk/src/matrix";
 
@@ -23,6 +23,7 @@ import { CommandPartCreator } from "../../../editor/parts";
 import DocumentOffset from "../../../editor/offset";
 import { SDKContextClass } from "../../../contexts/SDKContextClass";
 import SettingsStore from "../../../settings/SettingsStore";
+import { SettingLevel } from "../../../settings/SettingLevel";
 import { SDKContext } from "../../../contexts/SDKContext.ts";
 
 describe("BasicMessageComposer", () => {
@@ -260,6 +261,123 @@ describe("BasicMessageComposer", () => {
         // We can't easily verify tabCompleteName was called since it's private,
         // but the important thing is that the event wasn't ignored
         // The test passes if no errors are thrown and the event is handled
+    });
+});
+
+describe("BasicMessageComposer formatting toolbar", () => {
+    const renderer = createRenderer();
+    const pc = createPartCreator();
+
+    TestUtils.stubClient();
+
+    const client: MatrixClient = MatrixClientPeg.safeGet();
+    const room = new Room("!1234567890:domain", client, client.getSafeUserId());
+
+    const renderComposer = (model: EditorModel, disabled = false): void => {
+        render(<BasicMessageComposer model={model} room={room} disabled={disabled} />, {
+            wrapper: ({ children }) => (
+                <SDKContext.Provider value={SDKContextClass.instance}>{children}</SDKContext.Provider>
+            ),
+        });
+    };
+
+    const setSetting = (
+        name: "MessageComposerInput.alwaysShowFormatBar" | "MessageComposerInput.useMarkdown",
+        value: boolean,
+    ) => SettingsStore.setValue(name, null, SettingLevel.DEVICE, value);
+
+    const getText = (model: EditorModel): string => model.parts.map((part) => part.text).join("");
+
+    beforeEach(() => {
+        // An earlier test in this file leaves a getValue mock behind
+        vi.restoreAllMocks();
+    });
+
+    afterEach(async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
+        await setSetting("MessageComposerInput.useMarkdown", true);
+        SettingsStore.reset();
+    });
+
+    it("is docked by default", () => {
+        renderComposer(new EditorModel([], pc, renderer));
+
+        expect(screen.getByRole("toolbar", { name: "Formatting" })).toHaveClass("mx_MessageComposerFormatBar_docked");
+    });
+
+    it("floats over the selection when the setting is off", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", false);
+        renderComposer(new EditorModel([], pc, renderer));
+
+        expect(screen.getByRole("toolbar", { name: "Formatting", hidden: true })).not.toHaveClass(
+            "mx_MessageComposerFormatBar_docked",
+        );
+    });
+
+    it("is not docked when Markdown is off, as the buttons would do nothing", async () => {
+        await setSetting("MessageComposerInput.useMarkdown", false);
+        renderComposer(new EditorModel([], pc, renderer));
+
+        expect(screen.getByRole("toolbar", { name: "Formatting", hidden: true })).not.toHaveClass(
+            "mx_MessageComposerFormatBar_docked",
+        );
+    });
+
+    it("follows the setting without a remount", async () => {
+        renderComposer(new EditorModel([], pc, renderer));
+        const toolbar = screen.getByRole("toolbar", { name: "Formatting" });
+
+        await act(() => setSetting("MessageComposerInput.alwaysShowFormatBar", false));
+        expect(toolbar).not.toHaveClass("mx_MessageComposerFormatBar_docked");
+
+        await act(() => setSetting("MessageComposerInput.alwaysShowFormatBar", true));
+        expect(toolbar).toHaveClass("mx_MessageComposerFormatBar_docked");
+    });
+
+    it("formats the word at the caret and hands focus back to the input", async () => {
+        const model = new EditorModel([], pc, renderer);
+        renderComposer(model);
+        const input = screen.getByRole("textbox");
+        await userEvent.type(input, "hello");
+
+        // A real click moves focus onto the button first
+        const bold = screen.getByRole("button", { name: "Bold" });
+        bold.focus();
+        expect(input).not.toHaveFocus();
+        fireEvent.click(bold);
+
+        expect(getText(model)).toBe("**hello**");
+        expect(input).toHaveFocus();
+    });
+
+    it("only brings focus back to the input when the selection is somewhere else", async () => {
+        const model = new EditorModel([], pc, renderer);
+        renderComposer(model);
+        const input = screen.getByRole("textbox");
+        await userEvent.type(input, "hello");
+
+        // Select text elsewhere on the page, as if highlighting a message in the timeline
+        const elsewhere = document.body.appendChild(document.createElement("p"));
+        elsewhere.textContent = "a message";
+        document.getSelection()!.selectAllChildren(elsewhere);
+        input.blur();
+
+        fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+        expect(getText(model)).toBe("hello");
+        expect(input).toHaveFocus();
+        elsewhere.remove();
+    });
+
+    it("does not format a disabled composer", () => {
+        const model = new EditorModel([pc.plain("hello")], pc, renderer);
+        renderComposer(model, true);
+        const textNode = document.createTreeWalker(screen.getByRole("textbox"), NodeFilter.SHOW_TEXT).nextNode()!;
+        document.getSelection()!.collapse(textNode, 5);
+
+        fireEvent.click(screen.getByRole("button", { name: "Bold" }));
+
+        expect(getText(model)).toBe("hello");
     });
 });
 

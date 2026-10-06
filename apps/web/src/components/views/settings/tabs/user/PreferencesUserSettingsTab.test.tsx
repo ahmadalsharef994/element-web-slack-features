@@ -233,4 +233,33 @@ describe("PreferencesUserSettingsTab", () => {
             expect(screen.getByText(LABEL)).toBeInTheDocument();
         });
     });
+
+    describe("built-in PDF viewer", () => {
+        const LABEL = "Open PDF attachments in the built-in viewer";
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        // The setting only matters while the document previews lab is on, so it stays hidden until then.
+        it("is not offered when the document previews lab is off", () => {
+            renderTab();
+            expect(screen.queryByText(LABEL)).not.toBeInTheDocument();
+        });
+
+        it("is offered when the document previews lab is on", () => {
+            const original = SettingsStore.getValue;
+            vi.spyOn(SettingsStore, "getValue").mockImplementation((setting, ...rest) =>
+                setting === "feature_pdf_viewer" ? true : original(setting, ...rest),
+            );
+
+            renderTab();
+            expect(screen.getByText(LABEL)).toBeInTheDocument();
+        });
+    });
+
+    it("offers the always visible formatting toolbar with the composer settings", () => {
+        renderTab();
+        expect(screen.getByText("Always show the formatting toolbar above the composer")).toBeInTheDocument();
+    });
 });

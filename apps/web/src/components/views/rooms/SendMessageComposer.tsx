@@ -69,6 +69,7 @@ import { type RoomUploadViewModel, useRoomUploadViewModel } from "../../../viewm
 import { type MessageComposerUrlPreviewViewModel } from "../../../viewmodels/composer/MessageComposerUrlPreviewViewModel";
 import { linksIn } from "../../../utils/UrlUtils";
 import { type MessageComposerUrlPreviewSnapshot } from "@element-hq/web-shared-components";
+import { scheduledMessages } from "../../../utils/scheduledMessages";
 
 // The prefix used when persisting editor drafts to localstorage.
 export const EDITOR_STATE_STORAGE_PREFIX = "mx_cider_state_";
@@ -145,6 +146,8 @@ interface ISendMessageComposerProps extends MatrixClientProps {
 
 interface ISendMessageActionProps {
     urlPreviewSnapshot: MessageComposerUrlPreviewSnapshot;
+    /** If set, schedule the message for this time (ms timestamp) instead of sending it now. */
+    sendAt?: number;
 }
 
 export class SendMessageComposer extends React.Component<ISendMessageComposerProps> {
@@ -349,7 +352,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
     /*
      * The URL preview VM snapshot before the composer is cleared
      */
-    public async sendMessage({ urlPreviewSnapshot }: ISendMessageActionProps): Promise<void> {
+    public async sendMessage({ urlPreviewSnapshot, sendAt }: ISendMessageActionProps): Promise<void> {
         const model = this.model;
 
         if (model.isEmpty) {
@@ -465,6 +468,22 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
 
             // clear composer first so the user doesn't actually see the delay of attach URL preview image files
             clearComposerAndPushHistory();
+            if (sendAt) {
+                // Link previews are left out because they could be out of date by the time it is sent
+                const scheduleThreadId =
+                    this.props.relation?.rel_type === THREAD_RELATION_TYPE.name
+                        ? (this.props.relation.event_id ?? null)
+                        : null;
+                scheduledMessages.schedule(roomId, scheduleThreadId, content, sendAt);
+                if (replyToEvent) {
+                    dis.dispatch({
+                        action: "reply_to_event",
+                        event: null,
+                        context: this.context.timelineRenderingType,
+                    });
+                }
+                return;
+            }
             if (
                 await attachUrlPreviews(
                     this.props.mxClient,

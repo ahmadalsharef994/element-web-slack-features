@@ -7,13 +7,15 @@ Please see LICENSE in the repository root for full details.
 
 // @vitest-environment happy-dom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventType, MatrixEvent, MsgType } from "matrix-js-sdk/src/matrix";
 
 import { documentMediaForEvent, documentViewerForEvent, openDocumentViewer } from "./documentViewer";
 import { type MediaEventHelper } from "./MediaEventHelper";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
+import SettingsStore from "../settings/SettingsStore";
+import { SettingLevel } from "../settings/SettingLevel";
 
 function mkFileEvent(body: string, info?: Record<string, unknown>): MatrixEvent {
     return new MatrixEvent({
@@ -25,6 +27,11 @@ function mkFileEvent(body: string, info?: Record<string, unknown>): MatrixEvent 
 }
 
 describe("documentViewerForEvent", () => {
+    afterEach(async () => {
+        await SettingsStore.setValue("useBuiltInPdfViewer", null, SettingLevel.DEVICE, true);
+        SettingsStore.reset();
+    });
+
     it("offers nothing for a file no viewer can open", () => {
         expect(documentViewerForEvent(mkFileEvent("notes.txt", { mimetype: "text/plain" }))).toBeUndefined();
     });
@@ -45,6 +52,23 @@ describe("documentViewerForEvent", () => {
 
         expect(viewer?.openLabel()).toBe("Open Markdown");
         expect(viewer?.Component).toBeDefined();
+    });
+
+    describe("with the built-in PDF viewer turned off", () => {
+        beforeEach(() => SettingsStore.setValue("useBuiltInPdfViewer", null, SettingLevel.DEVICE, false));
+
+        it("offers nothing for a PDF, so the browser handles it", () => {
+            const mxEvent = mkFileEvent("spec.pdf", { mimetype: "application/pdf" });
+
+            expect(documentViewerForEvent(mxEvent)).toBeUndefined();
+            expect(documentMediaForEvent(mxEvent, mkHelper())).toBeUndefined();
+        });
+
+        it("still picks the Markdown viewer for a Markdown file", () => {
+            const mxEvent = mkFileEvent("README.md", { mimetype: "text/markdown" });
+
+            expect(documentViewerForEvent(mxEvent)?.openLabel()).toBe("Open Markdown");
+        });
     });
 });
 

@@ -21,9 +21,13 @@ import { longestBacktickSequence } from "./deserialize";
  * @param {Formatting} action the action that should be performed on the range
  */
 export function formatRange(range: Range, action: Formatting): void {
-    // If the selection was empty we select the current word instead
+    // If the selection was empty we select the current word instead, or the whole line for block formats
     if (range.wasInitializedEmpty()) {
-        selectRangeOfWordAtCaret(range);
+        if (action === Formatting.Heading || action === Formatting.Quote) {
+            selectRangeOfLineAtCaret(range);
+        } else {
+            selectRangeOfWordAtCaret(range);
+        }
     } else {
         // Remove whitespace or new lines in our selection
         range.trim();
@@ -136,6 +140,14 @@ export function selectRangeOfWordAtCaret(range: Range): void {
     // Select left side of word
     range.expandBackwardsWhile(isFormattable);
     // Trim possibly selected new lines
+    range.trim();
+}
+
+/** Expands the range to the whole line it sits on, for block formats that cannot work on a single word. */
+function selectRangeOfLineAtCaret(range: Range): void {
+    const isNotNewline = (_index: number, _offset: number, part: Part): boolean => part.type !== Type.Newline;
+    range.expandForwardsWhile(isNotNewline);
+    range.expandBackwardsWhile(isNotNewline);
     range.trim();
 }
 

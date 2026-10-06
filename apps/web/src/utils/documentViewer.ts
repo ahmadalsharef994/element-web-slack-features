@@ -14,6 +14,7 @@ import { _t } from "../languageHandler";
 import { MediaEventHelper } from "./MediaEventHelper";
 import { isPdfEvent } from "./pdfViewer";
 import { isMarkdownEvent } from "./markdownViewer";
+import SettingsStore from "../settings/SettingsStore";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
 import { type OpenDocumentViewerPayload } from "../dispatcher/payloads/OpenDocumentViewerPayload";
@@ -47,7 +48,8 @@ function lazyViewer(load: () => Promise<ComponentType<DocumentViewerProps>>): Co
  */
 const DOCUMENT_VIEWERS: readonly DocumentViewer[] = [
     {
-        matches: isPdfEvent,
+        // Read live, so the setting applies to every caller. Only PDFs have an off switch.
+        matches: (mxEvent) => SettingsStore.getValue("useBuiltInPdfViewer") && isPdfEvent(mxEvent),
         openLabel: () => _t("pdf_viewer|open"),
         Component: lazyViewer(() =>
             import("../components/views/right_panel/PdfViewer").then((module) => module.PdfViewer),

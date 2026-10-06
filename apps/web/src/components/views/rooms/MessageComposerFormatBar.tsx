@@ -34,6 +34,8 @@ export enum Formatting {
 
 interface IProps {
     shortcuts: Partial<Record<Formatting, string>>;
+    /** Keep the bar permanently in the layout, instead of floating over the selected text. */
+    docked?: boolean;
     onAction(action: Formatting): void;
 }
 
@@ -58,6 +60,7 @@ export default class MessageComposerFormatBar extends React.PureComponent<IProps
     public render(): React.ReactNode {
         const classes = classNames("mx_MessageComposerFormatBar", {
             mx_MessageComposerFormatBar_shown: this.state.visible,
+            mx_MessageComposerFormatBar_docked: this.props.docked,
         });
         return (
             <Toolbar className={classes} ref={this.formatBarRef} aria-label={_t("composer|formatting_toolbar_label")}>
@@ -107,7 +110,8 @@ export default class MessageComposerFormatBar extends React.PureComponent<IProps
     }
 
     public showAt(selectionRect: DOMRect): void {
-        if (!this.formatBarRef.current?.parentElement) return;
+        // A docked bar stays where it is, so it must not get a floating position
+        if (this.props.docked || !this.formatBarRef.current?.parentElement) return;
 
         this.setState({ visible: true });
         const parentRect = this.formatBarRef.current.parentElement.getBoundingClientRect();

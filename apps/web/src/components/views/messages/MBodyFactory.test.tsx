@@ -181,6 +181,7 @@ describe("MBodyFactory", () => {
         afterEach(async () => {
             // Both viewers share the lab, so a value left on the device would leak into the next test.
             await SettingsStore.setValue("feature_pdf_viewer", null, SettingLevel.DEVICE, false);
+            await SettingsStore.setValue("useBuiltInPdfViewer", null, SettingLevel.DEVICE, true);
             SettingsStore.reset();
         });
 
@@ -204,6 +205,16 @@ describe("MBodyFactory", () => {
             await act(() => SettingsStore.setValue("feature_pdf_viewer", null, SettingLevel.DEVICE, true));
 
             expect(screen.getByRole("button", { name: "Open PDF" })).toBeInTheDocument();
+        });
+
+        it("drops the viewer when the built-in PDF viewer is turned off, without a remount", async () => {
+            await SettingsStore.setValue("feature_pdf_viewer", null, SettingLevel.DEVICE, true);
+            renderPdfBody();
+            expect(screen.getByRole("button", { name: "Open PDF" })).toBeInTheDocument();
+
+            await act(() => SettingsStore.setValue("useBuiltInPdfViewer", null, SettingLevel.DEVICE, false));
+
+            expect(screen.queryByRole("button", { name: "Open PDF" })).not.toBeInTheDocument();
         });
     });
 

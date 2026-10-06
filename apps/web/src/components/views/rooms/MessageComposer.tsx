@@ -64,6 +64,7 @@ import { MessageComposerUrlPreviewViewModel } from "../../../viewmodels/composer
 import { useScopedRoomContext } from "../../../contexts/ScopedRoomContext";
 import PlatformPeg from "../../../PlatformPeg";
 import { ModuleApi } from "../../../modules/Api";
+import { ScheduleSendButton } from "./ScheduleSendButton";
 
 // The prefix used when persisting editor drafts to localstorage.
 export const WYSIWYG_EDITOR_STATE_STORAGE_PREFIX = "mx_wysiwyg_state_";
@@ -433,6 +434,12 @@ export class MessageComposer extends React.Component<IProps, IState> {
         }
     };
 
+    private scheduleMessage = (sendAt: number): void => {
+        const urlPreviewSnapshot = this.props.urlPreviewVm.getSnapshot();
+        this.props.urlPreviewVm.updateWithText({ content: "", debounced: false });
+        void this.messageComposerInput.current?.sendMessage({ urlPreviewSnapshot, sendAt });
+    };
+
     private onChange = (model: EditorModel): void => {
         this.props.urlPreviewVm.updateWithText({
             content: model.contentPlainText,
@@ -728,6 +735,16 @@ export class MessageComposer extends React.Component<IProps, IState> {
                                     toggleButtonMenu={this.toggleButtonMenu}
                                 />
                             )}
+                            {showSendButton &&
+                                !this.state.haveRecording &&
+                                !this.state.isWysiwygLabEnabled &&
+                                !isLocalRoom(this.props.room) && (
+                                    <ScheduleSendButton
+                                        key="controls_schedule"
+                                        roomId={this.props.room.roomId}
+                                        onSchedule={this.scheduleMessage}
+                                    />
+                                )}
                             {showSendButton && (
                                 <SendButton
                                     key="controls_send"

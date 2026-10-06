@@ -105,6 +105,7 @@ interface IProps {
 
 interface IState {
     useMarkdown: boolean;
+    alwaysShowFormatBar: boolean;
     showPillAvatar: boolean;
     query?: string;
     showVisualBell?: boolean;
@@ -131,6 +132,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
     private lastSelection: ReturnType<typeof cloneSelection> | null = null;
 
     private useMarkdownHandle?: string;
+    private alwaysShowFormatBarHandle?: string;
     private emoticonSettingHandle?: string;
     private shouldShowPillAvatarSettingHandle?: string;
     private surroundWithHandle?: string;
@@ -141,6 +143,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         this.state = {
             showPillAvatar: SettingsStore.getValue("Pill.shouldShowPillAvatar"),
             useMarkdown: SettingsStore.getValue("MessageComposerInput.useMarkdown"),
+            alwaysShowFormatBar: SettingsStore.getValue("MessageComposerInput.alwaysShowFormatBar"),
             surroundWith: SettingsStore.getValue("MessageComposerInput.surroundWith"),
             showVisualBell: false,
         };
@@ -704,6 +707,15 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         }
     };
 
+    private configureAlwaysShowFormatBar = (): void => {
+        this.setState({ alwaysShowFormatBar: SettingsStore.getValue("MessageComposerInput.alwaysShowFormatBar") });
+    };
+
+    /** Formatting does nothing without Markdown, so there is no point in showing the bar then. */
+    private get formatBarDocked(): boolean {
+        return this.state.alwaysShowFormatBar && this.state.useMarkdown;
+    }
+
     private configureEmoticonAutoReplace = (): void => {
         this.props.model.setTransformCallback(this.transform);
     };
@@ -730,6 +742,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         this.editorRef.current?.removeEventListener("compositionstart", this.onCompositionStart, true);
         this.editorRef.current?.removeEventListener("compositionend", this.onCompositionEnd, true);
         SettingsStore.unwatchSetting(this.useMarkdownHandle);
+        SettingsStore.unwatchSetting(this.alwaysShowFormatBarHandle);
         SettingsStore.unwatchSetting(this.emoticonSettingHandle);
         SettingsStore.unwatchSetting(this.shouldShowPillAvatarSettingHandle);
         SettingsStore.unwatchSetting(this.surroundWithHandle);
@@ -740,6 +753,11 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
             "MessageComposerInput.useMarkdown",
             null,
             this.configureUseMarkdown,
+        );
+        this.alwaysShowFormatBarHandle = SettingsStore.watchSetting(
+            "MessageComposerInput.alwaysShowFormatBar",
+            null,
+            this.configureAlwaysShowFormatBar,
         );
         this.emoticonSettingHandle = SettingsStore.watchSetting(
             "MessageComposerInput.autoReplaceEmoji",
@@ -794,7 +812,14 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
     }
 
     public onFormatAction = (action: Formatting): void => {
-        if (!this.state.useMarkdown || !this.editorRef.current) {
+        if (!this.state.useMarkdown || this.props.disabled || !this.editorRef.current) {
+            return;
+        }
+
+        // The docked bar can be clicked while the selection is somewhere else on the page. Take the
+        // user back to the composer rather than formatting a position the browser never gave us.
+        if (this.formatBarDocked && !this.editorRef.current.contains(document.getSelection()?.anchorNode ?? null)) {
+            this.focus();
             return;
         }
 
@@ -804,6 +829,9 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         this.modifiedFlag = true;
 
         formatRange(range, action);
+
+        // Clicking the docked bar moves focus onto its button, so hand it back to keep typing
+        if (this.formatBarDocked) this.focus();
     };
 
     public render(): React.ReactNode {
@@ -854,6 +882,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
                     ref={this.formatBarRef}
                     onAction={this.onFormatAction}
                     shortcuts={shortcuts}
+                    docked={this.formatBarDocked}
                 />
                 <div
                     className={classes}

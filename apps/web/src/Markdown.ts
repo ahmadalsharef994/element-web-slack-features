@@ -18,6 +18,34 @@ const ALLOWED_HTML_TAGS = ["sub", "sup", "del", "s", "u", "br", "br/"];
 // These types of node are definitely text
 const TEXT_NODES = ["text", "softbreak", "linebreak", "paragraph", "document"];
 
+const TABLE_DELIMITER_CELL = /^:?-+:?$/;
+
+/** A GFM pipe table; cells hold raw Markdown. `align` has one entry per column. */
+interface Table {
+    align: ("left" | "center" | "right" | null)[];
+    header: string[];
+    body: string[][];
+}
+
+/**
+ * Splits a table row into trimmed cells. `\|` stays inside its cell (as `|`), other backslash escapes are left for
+ * the inline parser, and one framing pipe at each end is dropped. A lone `|` has no cells.
+ */
+function splitTableRow(line: string): string[] {
+    const cells = line
+        .trim()
+        .replace(/\\./g, (escaped) => (escaped === "\\|" ? "\0" : escaped))
+        .split("|");
+    if (cells[0] === "") cells.shift();
+    if (cells[cells.length - 1] === "") cells.pop();
+    return cells.map((cell) => cell.replace(/\0/g, "|").trim());
+}
+
+function isTableDelimiter(row: string): boolean {
+    const cells = splitTableRow(row);
+    return row.includes("|") && cells.length > 0 && cells.every((cell) => TABLE_DELIMITER_CELL.test(cell));
+}
+
 function isAllowedHtmlTag(node: commonmark.Node): boolean {
     if (!node.literal) {
         return false;
@@ -115,14 +143,62 @@ const emptyItemWithNoSiblings = (node: commonmark.Node): boolean => {
 export default class Markdown {
     private input: string;
     private parsed: commonmark.Node;
+    // Table nodes (html_block) mapped to their parsed content, rendered in toHTML so `externalLinks` reaches the cells
+    private tables = new WeakMap<commonmark.Node, Table>();
 
     public constructor(input: string) {
         this.input = input;
 
         const parser = new commonmark.Parser();
         this.parsed = parser.parse(this.input);
+        // Before the inline repairs, so text that came before a table is re-parsed and still gets them
+        this.parsed = this.repairTables(this.parsed);
         this.parsed = this.repairLinks(this.parsed);
         this.parsed = this.repairStrikethrough(this.parsed);
+    }
+
+    /**
+     * Turns GFM pipe tables into table nodes, since commonmark has none. Tables are found in the source lines of
+     * each paragraph, because the inline tree cannot tell an escaped pipe from emphasis that spans a pipe.
+     * Top-level paragraphs only (a table inside a quote or list stays text), and the delimiter row needs a pipe.
+     */
+    private repairTables(parsed: commonmark.Node): commonmark.Node {
+        if (!this.input.includes("|")) return parsed;
+
+        // Same line splitting as commonmark, so the paragraph's sourcepos lines up
+        const lines = this.input.split(/\r\n|\n|\r/);
+        for (let node = parsed.firstChild; node;) {
+            const next = node.next;
+            const rows = node.type === "paragraph" ? lines.slice(node.sourcepos[0][0] - 1, node.sourcepos[1][0]) : [];
+            // The delimiter row sits under a header row with the same number of cells
+            const d = rows.findIndex(
+                (row, i) =>
+                    i > 0 &&
+                    rows[i - 1].includes("|") &&
+                    isTableDelimiter(row) &&
+                    splitTableRow(rows[i - 1]).length === splitTableRow(row).length,
+            );
+            if (d > 0) {
+                const table = new commonmark.Node("html_block");
+                // The raw source, so toPlaintext stays correct
+                table.literal = rows.slice(d - 1).join("\n");
+                this.tables.set(table, {
+                    align: splitTableRow(rows[d]).map((cell) => {
+                        if (cell.startsWith(":")) return cell.endsWith(":") ? "center" : "left";
+                        return cell.endsWith(":") ? "right" : null;
+                    }),
+                    header: splitTableRow(rows[d - 1]),
+                    body: rows.slice(d + 1).map(splitTableRow),
+                });
+                // Any lines above the header stay a paragraph of their own
+                const before = d > 1 && new commonmark.Parser().parse(rows.slice(0, d - 1).join("\n")).firstChild;
+                if (before) node.insertBefore(before);
+                node.insertBefore(table);
+                node.unlink();
+            }
+            node = next;
+        }
+        return parsed;
     }
 
     /**
@@ -317,7 +393,7 @@ export default class Markdown {
                 // if it's an allowed html tag, we need to render it and therefore
                 // we will need to use HTML. If it's not allowed, it's not HTML since
                 // we'll just be treating it as text.
-                if (isAllowedHtmlTag(node)) {
+                if (this.tables.has(node) || isAllowedHtmlTag(node)) {
                     return false;
                 }
             } else {
@@ -325,6 +401,29 @@ export default class Markdown {
             }
         }
         return true;
+    }
+
+    private tableToHtml({ align, header, body }: Table, externalLinks: boolean): string {
+        // The header decides the column count: extra cells are dropped. Short rows are not padded, because padding
+        // makes the output columns x rows however small the input is. Browsers render uneven rows.
+        const row = (cells: string[], tag: "th" | "td"): string =>
+            "<tr>" +
+            cells
+                .slice(0, align.length)
+                .map((cell, i) => {
+                    const side = align[i];
+                    return `<${tag}${side ? ` align="${side}"` : ""}>${this.cellToHtml(cell, externalLinks)}</${tag}>`;
+                })
+                .join("") +
+            "</tr>";
+        const rows = body.map((cells) => row(cells, "td")).join("");
+        return `<table><thead>${row(header, "th")}</thead>${rows && `<tbody>${rows}</tbody>`}</table>`;
+    }
+
+    private cellToHtml(text: string, externalLinks: boolean): string {
+        const cell = new Markdown(text);
+        // Block syntax such as `# x`, `- x` or `<script>` stays literal text inside a cell
+        return cell.parsed.firstChild?.type === "paragraph" ? cell.toHTML({ externalLinks }) : escape(text);
     }
 
     /**
@@ -395,14 +494,16 @@ export default class Markdown {
             }
         };
 
-        renderer.html_block = function (node: commonmark.Node) {
+        renderer.html_block = (node: commonmark.Node) => {
             /*
             // as with `paragraph`, we only insert line breaks
             // if there are multiple lines in the markdown.
             const isMultiLine = is_multi_line(node);
             if (isMultiLine) this.cr();
             */
-            renderer.html_inline(node);
+            const table = this.tables.get(node);
+            if (table) renderer.lit(this.tableToHtml(table, externalLinks));
+            else renderer.html_inline(node);
             /*
             if (isMultiLine) this.cr();
             */

@@ -114,6 +114,49 @@ describe("sanitizeHtml", () => {
         expect(safe).toBe('<code class="language-js">code</code>');
     });
 
+    describe("tables", () => {
+        it("keeps table structure and the align attribute", () => {
+            const html =
+                '<table><thead><tr><th align="center">a</th></tr></thead>' +
+                '<tbody><tr><td align="right">1</td></tr></tbody></table>';
+
+            expect(sanitizeHtml(html)).toBe(html);
+        });
+
+        it("strips every other attribute from tables", () => {
+            const safe = sanitizeHtml(
+                '<table style="x" onclick="a()" class="x" id="y"><tr>' +
+                    '<td align="left" onclick="a()" style="color:red" colspan="99" rowspan="99"' +
+                    ' background="javascript:a()" class="x" id="y">c</td></tr></table>',
+            );
+
+            expect(safe).toBe('<table><tr><td align="left">c</td></tr></table>');
+        });
+
+        it("removes scripts, handlers and unsafe URLs inside cells", () => {
+            const safe = sanitizeHtml(
+                "<table><tr>" +
+                    "<td><script>alert(1)</script></td>" +
+                    '<td><a href="javascript:alert(1)" onclick="x">l</a></td>' +
+                    '<td><img src="javascript:alert(1)" onerror="alert(1)"></td>' +
+                    '<td><img src="https://evil.example/x.png"></td>' +
+                    '<td><svg onload="alert(1)"></svg><iframe src="https://evil.example"></iframe></td>' +
+                    "</tr></table>",
+            );
+
+            expect(safe).not.toMatch(/script|alert|javascript:|onclick|onerror|onload|evil\.example|<svg|<iframe/);
+            expect(safe).toContain("<table><tr>");
+        });
+
+        it("drops align when the caller does not allow it", () => {
+            const safe = sanitizeHtml('<table><tr><th align="center">a</th></tr></table>', {
+                allowedAttributes: { th: [] },
+            });
+
+            expect(safe).toBe("<table><tr><th>a</th></tr></table>");
+        });
+    });
+
     it("restricts tags, attributes, and self-closing tags when requested", () => {
         const safe = sanitizeHtml(
             '<p>paragraph</p><strong>strong</strong><span data-mx-spoiler="true">span</span><br><hr>',

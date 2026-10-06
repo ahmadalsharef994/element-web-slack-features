@@ -92,6 +92,35 @@ describe("editor/operations: formatting operations", () => {
                     .join(""),
             ).toBe("# one\n# two");
         });
+
+        // The docked bar makes a collapsed caret the normal case: block formats must act on the whole line
+        it.each([
+            ["hello world", 11, Formatting.Heading, "# hello world"],
+            ["hello world", 11, Formatting.Quote, "> hello world\n"],
+            ["hello world", 3, Formatting.Quote, "> hello world\n"],
+            ["# hello", 7, Formatting.Heading, "hello"],
+            ["# hello", 1, Formatting.Heading, "hello"],
+        ])("should format the whole line for a caret in %j at %d with %s", (text, offset, formatting, expected) => {
+            const model = new EditorModel([pc.plain(text)], pc, renderer);
+            formatRange(model.startRange(model.positionForOffset(offset, false)), formatting);
+            expect(
+                model
+                    .serializeParts()
+                    .map((p) => p.text)
+                    .join(""),
+            ).toBe(expected);
+        });
+
+        it("should only format the caret's line in a multi-line message", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.plain("hello world")], pc, renderer);
+            formatRange(model.startRange(model.positionForOffset(15, false)), Formatting.Heading);
+            expect(
+                model
+                    .serializeParts()
+                    .map((p) => p.text)
+                    .join(""),
+            ).toBe("one\n# hello world");
+        });
     });
 
     describe("formatRangeAsLink", () => {

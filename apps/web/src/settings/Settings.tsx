@@ -252,6 +252,7 @@ export interface Settings {
     "MessageComposerInput.showStickersButton": IBaseSetting<boolean>;
     "MessageComposerInput.showPollsButton": IBaseSetting<boolean>;
     "MessageComposerInput.insertTrailingColon": IBaseSetting<boolean>;
+    "MessageComposerInput.alwaysShowFormatBar": IBaseSetting<boolean>;
     "Notifications.showbold": IBaseSetting<boolean>;
     "Notifications.activityIsUnread": IBaseSetting<boolean>;
     "Notifications.tac_only_notifications": IBaseSetting<boolean>;
@@ -302,6 +303,7 @@ export interface Settings {
     "recent_emoji": IBaseSetting<RecentEmojiData>;
     "showMediaEventIds": IBaseSetting<{ [eventId: string]: boolean }>;
     "pdfViewerState": IBaseSetting<{ [mxcUri: string]: PdfViewerState }>;
+    "useBuiltInPdfViewer": IBaseSetting<boolean>;
     "SpotlightSearch.recentSearches": IBaseSetting<string[]>;
     "SpotlightSearch.showNsfwPublicRooms": IBaseSetting<boolean>;
     "room_directory_servers": IBaseSetting<string[]>;
@@ -723,6 +725,11 @@ export const SETTINGS: Settings = {
         displayName: _td("settings|insert_trailing_colon_mentions"),
         default: true,
     },
+    "MessageComposerInput.alwaysShowFormatBar": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("settings|always_show_format_bar"),
+        default: true,
+    },
     // Used to be a feature, name kept for backwards compat
     "feature_hidebold": {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
@@ -1098,6 +1105,12 @@ export const SETTINGS: Settings = {
         default: {}, // MXC URI => where the reader had got to in that PDF
         // Exports MXC URIs
         shouldExportToRageshake: false,
+    },
+    // Only has an effect while the "feature_pdf_viewer" lab is on.
+    "useBuiltInPdfViewer": {
+        supportedLevels: LEVELS_ACCOUNT_SETTINGS,
+        displayName: _td("settings|use_built_in_pdf_viewer"),
+        default: true,
     },
     "SpotlightSearch.showNsfwPublicRooms": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,

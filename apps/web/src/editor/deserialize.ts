@@ -133,6 +133,37 @@ function parseCodeBlock(n: Node, pc: PartCreator, opts: IParseOptions): Part[] {
     return parts;
 }
 
+// A Map, because the align value comes from the sender and must not reach object prototype keys
+const TABLE_ALIGN_DELIMITERS = new Map([
+    ["left", ":--"],
+    ["center", ":-:"],
+    ["right", "--:"],
+]);
+
+/** Turns a table into pipe-table text. The first row is the header. Caption, colspan and rowspan are lost. */
+function parseTable(n: Node, pc: PartCreator, opts: IParseOptions): Part[] {
+    // `rows` and `cells` skip nested tables, which are parsed once as part of their cell
+    const rows = Array.from((n as HTMLTableElement).rows);
+    if (!rows.length) return [];
+
+    // A pipe would split the cell and a newline would split the row, so write them as `\|` and `<br>`
+    const parseCell = (cell: Element): Part[] =>
+        parseChildren(cell, pc, opts).map((part) => {
+            if (part.type === Type.Newline) return pc.plain("<br>");
+            return part.type === Type.Plain ? pc.plain(part.text.replace(/\|/g, "\\|")) : part;
+        });
+    const lines = rows.map((row) => [
+        pc.plain("|"),
+        ...Array.from(row.cells).flatMap((cell) => [pc.plain(" "), ...parseCell(cell), pc.plain(" |")]),
+    ]);
+
+    const delimiters = Array.from(rows[0].cells).map(
+        (cell) => TABLE_ALIGN_DELIMITERS.get(cell.getAttribute("align")?.toLowerCase() ?? "") ?? "---",
+    );
+    lines.splice(1, 0, [pc.plain(`| ${delimiters.join(" | ")} |`)]);
+    return lines.flatMap((line, i) => (i ? [pc.newline(), ...line] : line));
+}
+
 function parseHeader(n: Node, pc: PartCreator, opts: IParseOptions): Part[] {
     const depth = parseInt(n.nodeName.slice(1), 10);
     const prefix = pc.plain("#".repeat(depth) + " ");
@@ -200,6 +231,8 @@ function parseNode(n: Node, pc: PartCreator, opts: IParseOptions, mkListItem?: (
                     return [pc.newline()];
                 case "HR":
                     return [pc.plain("---")];
+                case "TABLE":
+                    return parseTable(n, pc, opts);
                 case "EM":
                     return [pc.plain("_"), ...parseChildren(n, pc, opts), pc.plain("_")];
                 case "STRONG":

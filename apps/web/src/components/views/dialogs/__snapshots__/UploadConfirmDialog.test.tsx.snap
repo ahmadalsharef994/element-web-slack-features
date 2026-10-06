@@ -91,7 +91,7 @@ exports[`<UploadConfirmDialog /> > should display image preview 1`] = `
         </div>
       </div>
       <div
-        class="mx_Field mx_Field_input mx_UploadConfirmDialog_caption"
+        class="mx_Field mx_Field_input mx_UploadConfirmDialog_caption mx_AddedByAhmad"
       >
         <input
           autocomplete="off"

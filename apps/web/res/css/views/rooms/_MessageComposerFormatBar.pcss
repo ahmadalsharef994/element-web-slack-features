@@ -8,7 +8,7 @@ Please see LICENSE files in the repository root for full details.
 
 .mx_MessageComposerFormatBar {
     display: none;
-    width: calc(32px * 6);
+    width: calc(32px * 7);
     height: 32px;
     position: absolute;
     cursor: pointer;
@@ -22,6 +22,17 @@ Please see LICENSE files in the repository root for full details.
 
     &.mx_MessageComposerFormatBar_shown {
         display: block;
+    }
+
+    /* Always visible above the input. Wraps instead of overflowing in narrow composers. */
+    &.mx_MessageComposerFormatBar_docked {
+        display: flex;
+        flex-wrap: wrap;
+        position: static;
+        width: fit-content;
+        max-width: 100%;
+        height: auto;
+        margin-block-end: var(--cpd-space-1x);
     }
 
     > * {
@@ -66,4 +77,23 @@ Please see LICENSE files in the repository root for full details.
     font-weight: var(--cpd-font-weight-semibold);
     min-width: 54px;
     text-align: center;
+}
+
+/*
+ * A docked bar makes the composer taller. Line the buttons and the encryption icon up with the
+ * last line of the input instead of centring them on the bar and the input together.
+ */
+.mx_MessageComposer_row:has(.mx_MessageComposerFormatBar_docked) {
+    align-items: flex-end;
+
+    .mx_MessageComposer_actions {
+        /* One line of the input: 18px line height and 3px padding either side */
+        height: 24px;
+    }
+}
+
+.mx_MessageComposer_wrapper:has(.mx_MessageComposerFormatBar_docked) .mx_MessageComposer_e2eIconWrapper {
+    top: auto;
+    /* Centres the 12px icon on the last line of the input */
+    bottom: 6px;
 }

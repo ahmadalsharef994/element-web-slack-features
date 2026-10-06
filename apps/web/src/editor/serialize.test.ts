@@ -43,6 +43,15 @@ describe("editor/serialize", function () {
             const html = htmlSerializeIfNeeded(model, {});
             expect(html).toBe("<em>hello</em> world");
         });
+        it("a pipe table turns message into html", function () {
+            const html = htmlSerializeFromMdIfNeeded("| a | b |\n| --- | --- |\n| 1 | 2 |");
+            expect(html).toBe(
+                "<table><thead><tr><th>a</th><th>b</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>",
+            );
+        });
+        it.each(["|", "a | b", "| a | b |"])("pipes alone are not markdown: %s", function (md) {
+            expect(htmlSerializeFromMdIfNeeded(md)).toBeUndefined();
+        });
         it("displaynames ending in a backslash work", function () {
             const pc = createPartCreator();
             const model = new EditorModel([pc.userPill("Displayname\\", "@user:server")], pc);

@@ -69,6 +69,9 @@ const MATRIX_ALLOWED_ATTRIBUTES: HtmlSanitizeAllowedAttributes = {
     img: ["src", "alt", "title", "style"],
     ol: ["start"],
     code: ["class"],
+    // Column alignment of Markdown tables. colspan, rowspan and style stay out: Markdown cannot produce them.
+    th: ["align"],
+    td: ["align"],
 };
 
 const DANGEROUS_NON_TEXT_TAGS = [

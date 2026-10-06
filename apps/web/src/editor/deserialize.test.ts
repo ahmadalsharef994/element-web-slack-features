@@ -387,6 +387,59 @@ describe("editor/deserialize", function () {
             const parts = normalize(parseEvent(htmlMessage(html), createPartCreator()));
             expect(parts).toMatchSnapshot();
         });
+        describe("tables", function () {
+            const toText = (html: string): string =>
+                normalize(parseEvent(htmlMessage(html), createPartCreator()))
+                    .map((part) => part.text)
+                    .join("");
+
+            it("turns a table into pipe-table text with alignment", function () {
+                const html =
+                    '<table><thead><tr><th>a</th><th align="center">b</th></tr></thead>' +
+                    "<tbody><tr><td>1</td><td>2</td></tr></tbody></table>";
+                expect(toText(html)).toBe("| a | b |\n| --- | :-: |\n| 1 | 2 |");
+            });
+            it("reads left and right alignment and ignores unknown values", function () {
+                const html =
+                    '<table><tr><th align="LEFT">a</th><th align="right">b</th><th align="constructor">c</th></tr></table>';
+                expect(toText(html)).toBe("| a | b | c |\n| :-- | --: | --- |");
+            });
+            it("treats the first row as the header when there is no thead", function () {
+                expect(toText("<table><tr><td>a</td></tr><tr><td>1</td></tr></table>")).toBe("| a |\n| --- |\n| 1 |");
+            });
+            it("writes cell formatting as markdown", function () {
+                const html =
+                    "<table><tr><th><strong>b</strong></th><th><code>c</code></th>" +
+                    '<th><a href="http://example.com/">l</a></th><th><del>s</del></th></tr></table>';
+                expect(toText(html)).toBe(
+                    "| **b** | `c` | [l](http://example.com/) | ~~s~~ |\n| --- | --- | --- | --- |",
+                );
+            });
+            it("escapes pipes in cells, including in code and link text", function () {
+                const html =
+                    '<table><tr><th>a|b</th><th><code>c|d</code></th><th><a href="http://e/">x|y</a></th></tr></table>';
+                expect(toText(html)).toBe("| a\\|b | `c\\|d` | [x\\|y](http://e/) |\n| --- | --- | --- |");
+            });
+            it("keeps a line break in a cell on one row", function () {
+                expect(toText("<table><tr><th>a<br>b</th></tr></table>")).toBe("| a<br>b |\n| --- |");
+            });
+            it("separates a table from the paragraphs around it", function () {
+                const html = "<p>before</p><table><tr><th>a</th></tr></table><p>after</p>";
+                expect(toText(html)).toBe("before\n\n| a |\n| --- |\n\nafter");
+            });
+            it("ignores a table without rows", function () {
+                expect(toText("<table></table>")).toBe("");
+            });
+            it("writes a nested table once, as text inside its cell", function () {
+                const html = "<table><tr><td>a<table><tr><td>b</td></tr></table></td></tr></table>";
+                expect(toText(html)).toBe("| a<br><br>\\| b \\|<br>\\| --- \\| |\n| --- |");
+            });
+            it("stays fast for deeply nested tables", function () {
+                const depth = 200;
+                const html = "<table><tr><td>".repeat(depth) + "x" + "</td></tr></table>".repeat(depth);
+                expect(parseEvent(htmlMessage(html), createPartCreator()).length).toBeLessThan(depth * 20);
+            });
+        });
     });
     describe("plaintext messages", function () {
         it("turns html tags back into markdown", function () {

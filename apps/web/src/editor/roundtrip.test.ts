@@ -109,6 +109,12 @@ describe("editor/roundtrip", function () {
             ["quotations without separating newlines", "saying\n> NO\nis valid"],
             // Removes trailing and leading whitespace
             ["quotations with trailing and leading whitespace", "saying \n\n> NO\n\n is valid"],
+            ["tables", "| a | b |\n| --- | :-: |\n| 1 | 2 |"],
+            [
+                "tables with styling and an escaped pipe",
+                "| **a** | `x` \\| y |\n| --- | --- |\n| ~~s~~ | [l](http://example.com/) |",
+            ],
+            ["tables after text", "Hi\n\n| a |\n| --- |\n| 1 |"],
         ])("%s", async (_name, markdown) => {
             expect(await roundTripMarkdown(markdown)).toEqual(markdown);
         });

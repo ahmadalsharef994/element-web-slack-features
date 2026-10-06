@@ -39,6 +39,14 @@ describe("renderMarkdown", () => {
         expect(html).not.toContain("<br");
     });
 
+    it("renders a pipe table, opening links in its cells in a new tab", () => {
+        const html = renderMarkdown("| Name | Link |\n|:--|---|\n| **a** | [x](https://element.io/) |\n");
+
+        expect(html).toContain('<table><thead><tr><th align="left">Name</th><th>Link</th></tr></thead>');
+        expect(html).toContain('<td align="left"><strong>a</strong></td>');
+        expect(html).toContain('<a href="https://element.io/" target="_blank" rel="noreferrer noopener">x</a>');
+    });
+
     it("opens links in a new tab without leaking the referrer", () => {
         const html = renderMarkdown("[Element](https://element.io/)");
 

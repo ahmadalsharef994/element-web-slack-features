@@ -2424,6 +2424,20 @@
         "failed_read_event": "Failed to read events",
         "failed_send_event": "Failed to send event"
     },
+    "schedule_send": {
+        "button_title": "Schedule send (new, added by Ahmad)",
+        "custom_time": "Pick date and time…",
+        "in_one_hour": "In 1 hour",
+        "list_empty": "Nothing is scheduled in this room.",
+        "list_title": "Scheduled messages",
+        "manage": "Scheduled messages (%(count)s)",
+        "picker_confirm": "Schedule",
+        "picker_label": "Send at",
+        "picker_past": "Choose a time in the future.",
+        "picker_title": "Schedule message",
+        "send_now": "Send now",
+        "tomorrow_morning": "Tomorrow at 9:00"
+    },
     "server_offline": {
         "description": "Your server isn't responding to some of your requests. Below are some of the most likely reasons.",
         "description_1": "The server (%(serverName)s) took too long to respond.",
@@ -2476,6 +2490,7 @@
         "activityIsUnread": "Consider all new activity as an unread message",
         "all_rooms_home": "Show all rooms in Home",
         "all_rooms_home_description": "All rooms you're in will appear in Home.",
+        "always_show_format_bar": "Always show the formatting toolbar above the composer",
         "always_show_message_timestamps": "Always show message timestamps",
         "appearance": {
             "bundled_emoji_font": "Use bundled emoji font",
@@ -3009,6 +3024,7 @@
         },
         "tac_only_notifications": "In the Other threads tab, only show notifications",
         "use_12_hour_format": "Show timestamps in 12 hour format (e.g. 2:30pm)",
+        "use_built_in_pdf_viewer": "Open PDF attachments in the built-in viewer",
         "use_command_enter_send_message": "Use Command + Enter to send a message",
         "use_command_f_search": "Use Command + F to search timeline",
         "use_control_enter_send_message": "Use Ctrl + Enter to send a message",

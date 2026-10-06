@@ -192,6 +192,26 @@ $left-gutter: 64px;
             }
         }
 
+        table {
+            /* A wide table scrolls inside the message instead of widening it */
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+
+            tr {
+                background-color: transparent;
+            }
+
+            tr:nth-child(2n) {
+                background-color: var(--cpd-color-bg-subtle-secondary);
+            }
+
+            th,
+            td {
+                border-color: var(--cpd-color-border-disabled);
+            }
+        }
+
         h1,
         h2,
         h3,

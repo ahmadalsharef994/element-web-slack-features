@@ -122,7 +122,12 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
     private static KEYBINDINGS_SETTINGS: BooleanSettingKey[] = ["ctrlFForSearch"];
 
     /** Settings added by Ahmad, highlighted in the list */
-    private static ADDED_BY_AHMAD: BooleanSettingKey[] = ["sharePresence", "showPresence"];
+    private static ADDED_BY_AHMAD: BooleanSettingKey[] = [
+        "sharePresence",
+        "showPresence",
+        "useBuiltInPdfViewer",
+        "MessageComposerInput.alwaysShowFormatBar",
+    ];
 
     private static PRESENCE_SETTINGS: BooleanSettingKey[] = [
         "sendReadReceipts",
@@ -134,6 +139,7 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
     private static COMPOSER_SETTINGS: BooleanSettingKey[] = [
         "MessageComposerInput.autoReplaceEmoji",
         "MessageComposerInput.useMarkdown",
+        "MessageComposerInput.alwaysShowFormatBar",
         "MessageComposerInput.suggestEmoji",
         "MessageComposerInput.ctrlEnterToSend",
         "MessageComposerInput.surroundWith",
@@ -385,6 +391,8 @@ export default class PreferencesUserSettingsTab extends React.Component<EmptyObj
 
                     <SettingsSubsection heading={_t("common|timeline")} formWrap>
                         {this.renderGroup(PreferencesUserSettingsTab.TIMELINE_SETTINGS)}
+                        {/* Only has an effect while the lab is on, so stay hidden until then */}
+                        {SettingsStore.getValue("feature_pdf_viewer") && this.renderGroup(["useBuiltInPdfViewer"])}
                     </SettingsSubsection>
 
                     <SettingsSubsection heading={_t("common|moderation_and_safety")} legacy={false}>

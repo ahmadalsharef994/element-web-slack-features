@@ -163,6 +163,26 @@ describe("bodyToHtml", () => {
         );
     });
 
+    it("keeps the structure and alignment of tables and strips everything unsafe", () => {
+        const html = bodyToHtml(
+            {
+                body: "table",
+                msgtype: "m.text",
+                format: "org.matrix.custom.html",
+                formatted_body:
+                    '<table style="width:1px" onclick="alert(1)"><thead><tr><th align="center" style="color:red">h</th></tr></thead>' +
+                    '<tbody><tr><td align="right" onclick="alert(1)" colspan="9" rowspan="9">c</td></tr>' +
+                    '<tr><td><a href="javascript:alert(1)">l</a><script>alert(1)</script></td></tr></tbody></table>',
+            },
+            [],
+            {},
+        );
+
+        expect(html).toContain('<table><thead><tr><th align="center">h</th></tr></thead>');
+        expect(html).toContain('<td align="right">c</td>');
+        expect(html).not.toMatch(/style=|onclick|colspan|rowspan|javascript:|script|alert/);
+    });
+
     it("does not mistake characters in text presentation mode for emoji", () => {
         const { asFragment } = render(
             <span className="mx_EventTile_body translate" dir="auto">

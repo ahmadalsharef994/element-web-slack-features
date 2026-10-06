@@ -69,6 +69,7 @@ import { clearUploadedMediaCache } from "./utils/UploadedMediaCache";
 import { CallStatusListener } from "./CallStatusListener.ts";
 import { CallStore } from "./stores/CallStore.ts";
 import { ModuleApi } from "./modules/Api.ts";
+import { scheduledMessages } from "./utils/scheduledMessages";
 
 const HOMESERVER_URL_KEY = "mx_hs_url";
 const ID_SERVER_URL_KEY = "mx_is_url";
@@ -1045,6 +1046,7 @@ async function startMatrixClient(
     DMRoomMap.makeShared(client).start();
     IntegrationManagers.sharedInstance().startWatching();
     ActiveWidgetStore.instance.start();
+    scheduledMessages.start(client);
     SDKContextClass.instance.legacyCallHandler.start();
     checkBrowserSupport();
 
@@ -1174,6 +1176,7 @@ export async function clearStorage(opts?: { deleteEverything?: boolean }): Promi
  */
 export function stopMatrixClient(unsetClient = true): void {
     SDKContextClass.instance.legacyCallHandler.stop();
+    scheduledMessages.stop();
     SDKContextClass.instance.notifier.stop();
     UserActivity.sharedInstance().stop();
     SDKContextClass.instance.typingStore.reset();
