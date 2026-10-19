@@ -93,7 +93,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
           </div>
         </div>
         <div
-          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-light"
         >
           <div
             class="_inline-field-control"
@@ -104,6 +104,39 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
               <input
                 class="_input"
                 id="radix-react-use-id-3"
+                name="themeSelector"
+                title=""
+                type="radio"
+                value="light-sand"
+              />
+              <div
+                class="_ui"
+              />
+            </div>
+          </div>
+          <div
+            class="_inline-field-body"
+          >
+            <label
+              class="_label mx_ThemeChoicePanel_themeSelector_Label"
+              for="radix-react-use-id-3"
+            >
+              Sand
+            </label>
+          </div>
+        </div>
+        <div
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+        >
+          <div
+            class="_inline-field-control"
+          >
+            <div
+              class="_container"
+            >
+              <input
+                class="_input"
+                id="radix-react-use-id-4"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -119,7 +152,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-3"
+              for="radix-react-use-id-4"
             >
               Dark
             </label>
@@ -136,7 +169,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
             >
               <input
                 class="_input"
-                id="radix-react-use-id-4"
+                id="radix-react-use-id-5"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -152,7 +185,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-4"
+              for="radix-react-use-id-5"
             >
               High contrast
             </label>
@@ -169,7 +202,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
             >
               <input
                 class="_input"
-                id="radix-react-use-id-5"
+                id="radix-react-use-id-6"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -185,7 +218,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-5"
+              for="radix-react-use-id-6"
             >
               Alice theme
             </label>
@@ -296,7 +329,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
           </div>
         </div>
         <div
-          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-light"
         >
           <div
             class="_inline-field-control"
@@ -307,6 +340,39 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
               <input
                 class="_input"
                 id="radix-react-use-id-3"
+                name="themeSelector"
+                title=""
+                type="radio"
+                value="light-sand"
+              />
+              <div
+                class="_ui"
+              />
+            </div>
+          </div>
+          <div
+            class="_inline-field-body"
+          >
+            <label
+              class="_label mx_ThemeChoicePanel_themeSelector_Label"
+              for="radix-react-use-id-3"
+            >
+              Sand
+            </label>
+          </div>
+        </div>
+        <div
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+        >
+          <div
+            class="_inline-field-control"
+          >
+            <div
+              class="_container"
+            >
+              <input
+                class="_input"
+                id="radix-react-use-id-4"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -322,7 +388,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-3"
+              for="radix-react-use-id-4"
             >
               Dark
             </label>
@@ -339,7 +405,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
             >
               <input
                 class="_input"
-                id="radix-react-use-id-4"
+                id="radix-react-use-id-5"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -355,7 +421,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-4"
+              for="radix-react-use-id-5"
             >
               High contrast
             </label>
@@ -372,7 +438,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
             >
               <input
                 class="_input"
-                id="radix-react-use-id-5"
+                id="radix-react-use-id-6"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -388,7 +454,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-5"
+              for="radix-react-use-id-6"
             >
               Alice theme
             </label>
@@ -499,7 +565,7 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
           </div>
         </div>
         <div
-          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-light"
         >
           <div
             class="_inline-field-control"
@@ -510,6 +576,39 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
               <input
                 class="_input"
                 id="radix-react-use-id-3"
+                name="themeSelector"
+                title=""
+                type="radio"
+                value="light-sand"
+              />
+              <div
+                class="_ui"
+              />
+            </div>
+          </div>
+          <div
+            class="_inline-field-body"
+          >
+            <label
+              class="_label mx_ThemeChoicePanel_themeSelector_Label"
+              for="radix-react-use-id-3"
+            >
+              Sand
+            </label>
+          </div>
+        </div>
+        <div
+          class="_inline-field mx_ThemeChoicePanel_themeSelector cpd-theme-dark"
+        >
+          <div
+            class="_inline-field-control"
+          >
+            <div
+              class="_container"
+            >
+              <input
+                class="_input"
+                id="radix-react-use-id-4"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -525,7 +624,7 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-3"
+              for="radix-react-use-id-4"
             >
               Dark
             </label>
@@ -542,7 +641,7 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
             >
               <input
                 class="_input"
-                id="radix-react-use-id-4"
+                id="radix-react-use-id-5"
                 name="themeSelector"
                 title=""
                 type="radio"
@@ -558,7 +657,7 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
           >
             <label
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
-              for="radix-react-use-id-4"
+              for="radix-react-use-id-5"
             >
               High contrast
             </label>

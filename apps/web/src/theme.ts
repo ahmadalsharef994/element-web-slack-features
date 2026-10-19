@@ -96,6 +96,7 @@ export function enumerateThemes(): { [key: string]: string } {
     const BUILTIN_THEMES = {
         "light": _t("common|light"),
         "light-high-contrast": _t("theme|light_high_contrast"),
+        "light-sand": _t("theme|light_sand"),
         "dark": _t("common|dark"),
     };
     const customThemes = SettingsStore.getValue("custom_themes") || [];

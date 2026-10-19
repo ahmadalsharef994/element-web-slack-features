@@ -23,6 +23,7 @@ describe("theme", () => {
         let lightTheme: HTMLStyleElement;
         let darkTheme: HTMLStyleElement;
         let lightCustomTheme: HTMLStyleElement;
+        let sandTheme: HTMLStyleElement;
 
         let spyQuerySelectorAll: ReturnType<typeof vi.spyOn>;
         let spyClassList: ReturnType<typeof vi.spyOn>;
@@ -34,7 +35,7 @@ describe("theme", () => {
         });
 
         beforeEach(() => {
-            const styles = ["light", "dark", "light-custom", "dark-custom"].map(
+            const styles = ["light", "dark", "light-custom", "dark-custom", "light-sand"].map(
                 (theme) =>
                     ({
                         dataset: {
@@ -48,6 +49,7 @@ describe("theme", () => {
             lightTheme = styles[0];
             darkTheme = styles[1];
             lightCustomTheme = styles[2];
+            sandTheme = styles[4];
 
             vi.spyOn(document.body, "style", "get").mockReturnValue([] as any);
             spyQuerySelectorAll = vi.spyOn(document, "querySelectorAll").mockReturnValue(styles as any);
@@ -81,6 +83,17 @@ describe("theme", () => {
 
             // Then
             expect(spyClassList).toHaveBeenCalledWith("cpd-theme-dark");
+        });
+
+        it("should switch to sand on top of the compound light tokens", async () => {
+            await new Promise((resolve) => {
+                setTheme("light-sand").then(resolve);
+                sandTheme.onload!({} as Event);
+            });
+
+            expect(sandTheme.disabled).toBe(false);
+            expect(lightTheme.disabled).toBe(true);
+            expect(spyClassList).toHaveBeenCalledWith("cpd-theme-light");
         });
 
         it("should reject promise on onerror call", () => {
@@ -200,6 +213,7 @@ describe("theme", () => {
             expect(enumerateThemes()).toEqual({
                 "light": "Light",
                 "light-high-contrast": "Light high contrast",
+                "light-sand": "Sand",
                 "dark": "Dark",
                 "custom-pink": "pink",
             });
@@ -210,6 +224,7 @@ describe("theme", () => {
             expect(enumerateThemes()).toEqual({
                 "light": "Light",
                 "light-high-contrast": "Light high contrast",
+                "light-sand": "Sand",
                 "dark": "Dark",
             });
         });
@@ -220,6 +235,7 @@ describe("theme", () => {
             vi.spyOn(SettingsStore, "getValue").mockReturnValue([{ name: "Zebra Striped" }, { name: "Apple Green" }]);
             expect(getOrderedThemes()).toEqual([
                 { id: "light", name: "Light" },
+                { id: "light-sand", name: "Sand" },
                 { id: "dark", name: "Dark" },
                 { id: "custom-Apple Green", name: "Apple Green" },
                 { id: "custom-Zebra Striped", name: "Zebra Striped" },
