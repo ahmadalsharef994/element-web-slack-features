@@ -1,0 +1,54 @@
+/*
+Copyright 2026 Ahmad
+
+SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
+Please see LICENSE files in the repository root for full details.
+*/
+
+.mx_ScheduledMessagesDialog {
+    .mx_ScheduledMessagesDialog_list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        /* Many scheduled messages scroll inside the dialog instead of making it taller than the window */
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .mx_ScheduledMessagesDialog_item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--cpd-space-3x);
+        padding-block: var(--cpd-space-3x);
+        border-block-end: 1px solid var(--cpd-color-border-disabled);
+    }
+
+    .mx_ScheduledMessagesDialog_details {
+        flex: 1 1 240px;
+        min-width: 0;
+    }
+
+    .mx_ScheduledMessagesDialog_time {
+        font: var(--cpd-font-body-sm-regular);
+        color: var(--cpd-color-text-secondary);
+    }
+
+    .mx_ScheduledMessagesDialog_body {
+        font: var(--cpd-font-body-md-regular);
+        color: var(--cpd-color-text-primary);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .mx_ScheduledMessagesDialog_files {
+        font: var(--cpd-font-body-sm-regular);
+        color: var(--cpd-color-text-secondary);
+        overflow-wrap: anywhere;
+    }
+
+    .mx_ScheduledMessagesDialog_actions {
+        display: flex;
+        gap: var(--cpd-space-2x);
+    }
+}

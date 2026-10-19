@@ -21,9 +21,15 @@ import ScheduledMessagesDialog from "../dialogs/ScheduledMessagesDialog";
 import { scheduledMessages, ScheduledMessages } from "../../../utils/scheduledMessages";
 
 interface IProps {
-    roomId: string;
+    /** Whether the composer has something to send. If not, the button only opens the list. */
+    canSchedule: boolean;
     /** Called with the time to send the composer's message at, as a timestamp in ms. */
     onSchedule: (sendAt: number) => void;
+}
+
+/** An hour from now. */
+function inOneHour(): number {
+    return Date.now() + 60 * 60 * 1000;
 }
 
 /** Tomorrow at 9:00 in the user's time zone. */
@@ -34,17 +40,17 @@ function tomorrowMorning(): number {
     return date.getTime();
 }
 
-/** A button beside Send that lets people choose a later time to send the message. */
-export function ScheduleSendButton({ roomId, onSchedule }: IProps): JSX.Element {
+/** A button beside Send that lets people choose a later time to send the message, and see what is scheduled. */
+export function ScheduleSendButton({ canSchedule, onSchedule }: IProps): JSX.Element {
     const [menuDisplayed, button, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
-    const [scheduledCount, setScheduledCount] = useState(() => scheduledMessages.getForRoom(roomId).length);
+    const [scheduledCount, setScheduledCount] = useState(() => scheduledMessages.getGroups().length);
     useEffect(() => {
-        const update = (): void => setScheduledCount(scheduledMessages.getForRoom(roomId).length);
+        const update = (): void => setScheduledCount(scheduledMessages.getGroups().length);
         scheduledMessages.on(ScheduledMessages.UPDATE, update);
         return () => {
             scheduledMessages.off(ScheduledMessages.UPDATE, update);
         };
-    }, [roomId]);
+    }, []);
 
     const pickCustomTime = async (): Promise<void> => {
         const { finished } = Modal.createDialog(SchedulePickerDialog);
@@ -64,28 +70,32 @@ export function ScheduleSendButton({ roomId, onSchedule }: IProps): JSX.Element 
                 onFinished={closeMenu}
                 compact
             >
-                <IconizedContextMenuOptionList first>
-                    <IconizedContextMenuOption
-                        label={_t("schedule_send|in_one_hour")}
-                        onClick={choose(() => onSchedule(Date.now() + 60 * 60 * 1000))}
-                    />
-                    <IconizedContextMenuOption
-                        label={_t("schedule_send|tomorrow_morning")}
-                        onClick={choose(() => onSchedule(tomorrowMorning()))}
-                    />
-                    <IconizedContextMenuOption
-                        label={_t("schedule_send|custom_time")}
-                        onClick={choose(() => void pickCustomTime())}
-                    />
-                </IconizedContextMenuOptionList>
-                {scheduledCount > 0 && (
-                    <IconizedContextMenuOptionList>
+                {canSchedule && (
+                    <IconizedContextMenuOptionList first>
                         <IconizedContextMenuOption
-                            label={_t("schedule_send|manage", { count: scheduledCount })}
-                            onClick={choose(() => void Modal.createDialog(ScheduledMessagesDialog, { roomId }))}
+                            label={_t("schedule_send|in_one_hour")}
+                            onClick={choose(() => onSchedule(inOneHour()))}
+                        />
+                        <IconizedContextMenuOption
+                            label={_t("schedule_send|tomorrow_morning")}
+                            onClick={choose(() => onSchedule(tomorrowMorning()))}
+                        />
+                        <IconizedContextMenuOption
+                            label={_t("schedule_send|custom_time")}
+                            onClick={choose(() => void pickCustomTime())}
                         />
                     </IconizedContextMenuOptionList>
                 )}
+                <IconizedContextMenuOptionList first={!canSchedule}>
+                    <IconizedContextMenuOption
+                        label={
+                            scheduledCount > 0
+                                ? _t("schedule_send|manage", { count: scheduledCount })
+                                : _t("schedule_send|list_title")
+                        }
+                        onClick={choose(() => void Modal.createDialog(ScheduledMessagesDialog))}
+                    />
+                </IconizedContextMenuOptionList>
             </IconizedContextMenu>
         );
     }
@@ -93,7 +103,7 @@ export function ScheduleSendButton({ roomId, onSchedule }: IProps): JSX.Element 
     return (
         <>
             <AccessibleButton
-                className="mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
+                className="mx_MessageComposer_scheduleSend"
                 onClick={openMenu}
                 title={_t("schedule_send|button_title")}
                 ref={button}

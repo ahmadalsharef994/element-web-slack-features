@@ -80,7 +80,6 @@ export default class MessageComposerFormatBar extends React.PureComponent<IProps
                     label={_t("composer|format_heading")}
                     onClick={() => this.props.onAction(Formatting.Heading)}
                     icon={<TextFormattingIcon />}
-                    className="mx_AddedByAhmad_inline"
                 />
                 <FormatButton
                     label={_t("composer|format_strikethrough")}
@@ -132,7 +131,6 @@ interface IFormatButtonProps {
     label: string;
     icon: JSX.Element;
     shortcut?: string;
-    className?: string;
     onClick(): void;
 }
 
@@ -148,7 +146,7 @@ class FormatButton extends React.PureComponent<IFormatButtonProps> {
                 aria-label={this.props.label}
                 title={this.props.label}
                 caption={this.props.shortcut}
-                className={classNames("mx_MessageComposerFormatBar_button", this.props.className)}
+                className="mx_MessageComposerFormatBar_button"
             >
                 {this.props.icon}
             </RovingAccessibleButton>

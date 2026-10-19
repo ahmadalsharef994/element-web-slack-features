@@ -728,7 +728,7 @@ export const SETTINGS: Settings = {
     "MessageComposerInput.alwaysShowFormatBar": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("settings|always_show_format_bar"),
-        default: true,
+        default: false,
     },
     // Used to be a feature, name kept for backwards compat
     "feature_hidebold": {

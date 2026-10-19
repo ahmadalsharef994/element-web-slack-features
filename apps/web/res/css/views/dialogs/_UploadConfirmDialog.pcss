@@ -11,6 +11,9 @@ Please see LICENSE files in the repository root for full details.
 
 .mx_UploadConfirmDialog_previewOuter {
     text-align: center;
+    /* Many files should scroll inside the dialog instead of making it taller than the window */
+    max-height: 50vh;
+    overflow-y: auto;
 }
 
 .mx_UploadConfirmDialog_previewInner {

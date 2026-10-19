@@ -604,7 +604,7 @@
         "format_bold": "Bold",
         "format_code_block": "Code block",
         "format_decrease_indent": "Indent decrease",
-        "format_heading": "Heading (new, added by Ahmad)",
+        "format_heading": "Heading",
         "format_increase_indent": "Indent increase",
         "format_inline_code": "Code",
         "format_insert_link": "Insert link",
@@ -2425,10 +2425,12 @@
         "failed_send_event": "Failed to send event"
     },
     "schedule_send": {
-        "button_title": "Schedule send (new, added by Ahmad)",
+        "button_title": "Schedule send",
+        "caption_label": "Caption (optional)",
         "custom_time": "Pick date and time…",
+        "edit_title": "Edit scheduled message",
         "in_one_hour": "In 1 hour",
-        "list_empty": "Nothing is scheduled in this room.",
+        "list_empty": "Nothing is scheduled.",
         "list_title": "Scheduled messages",
         "manage": "Scheduled messages (%(count)s)",
         "picker_confirm": "Schedule",
@@ -2436,6 +2438,7 @@
         "picker_past": "Choose a time in the future.",
         "picker_title": "Schedule message",
         "send_now": "Send now",
+        "text_label": "Message",
         "tomorrow_morning": "Tomorrow at 9:00"
     },
     "server_offline": {
@@ -3862,8 +3865,6 @@
         "error_title": "Upload Error",
         "not_image": "The file you have chosen is not a valid image file.",
         "title": "Upload files",
-        "title_progress": "Upload files (%(current)s of %(total)s)",
-        "upload_all_button": "Upload all",
         "upload_n_others_button": {
             "one": "Upload %(count)s other file",
             "other": "Upload %(count)s other files"

@@ -54,6 +54,7 @@ import { addReplyToMessageContent } from "./utils/Reply";
 import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import UploadFailureDialog from "./components/views/dialogs/UploadFailureDialog";
 import UploadConfirmDialog from "./components/views/dialogs/UploadConfirmDialog";
+import { scheduledMessages } from "./utils/scheduledMessages";
 import { createThumbnail } from "./utils/image-media";
 import { attachMentions, attachRelation } from "./utils/messages.ts";
 import { doMaybeLocalRoomAction } from "./utils/local-room";
@@ -490,30 +491,27 @@ export default class ContentMessages {
             if (!shouldContinue) return;
         }
 
-        let uploadAll = false;
+        // One dialog for all the files, with a single caption that goes on the first one
+        let filesToSend: File[] = [];
+        let caption: string | undefined;
+        let sendAt: number | undefined;
+        if (okFiles.length > 0) {
+            const { finished } = Modal.createDialog(UploadConfirmDialog, { files: okFiles });
+            let confirmed: boolean | undefined;
+            [confirmed, caption, sendAt] = await finished;
+            if (confirmed) filesToSend = okFiles;
+        }
+        // Files scheduled together are listed, changed and cancelled together
+        const schedule = sendAt
+            ? { sendAt, batchId: `${Date.now()}-${Math.random().toString(36).slice(2)}` }
+            : undefined;
+
         // Promise to complete before sending next file into room, used for synchronisation of file-sending
         // to match the order the files were specified in
         let promBefore: Promise<any> = Promise.resolve();
         const sentFileTypes: string[] = [];
-        for (let i = 0; i < okFiles.length; ++i) {
-            const file = okFiles[i];
+        filesToSend.forEach((file, i) => {
             const loopPromiseBefore = promBefore;
-            // Per iteration, because the send below runs after the loop has moved on
-            let caption: string | undefined;
-
-            if (!uploadAll) {
-                const { finished } = Modal.createDialog(UploadConfirmDialog, {
-                    file,
-                    currentIndex: i,
-                    totalFiles: okFiles.length,
-                });
-                const [shouldContinue, shouldUploadAll, uploadCaption] = await finished;
-                if (!shouldContinue) break;
-                caption = uploadCaption;
-                if (shouldUploadAll) {
-                    uploadAll = true;
-                }
-            }
             sentFileTypes.push(file.type.split("/")[0]);
 
             promBefore = doMaybeLocalRoomAction(
@@ -526,11 +524,12 @@ export default class ContentMessages {
                         matrixClient,
                         replyToEvent ?? undefined,
                         loopPromiseBefore,
-                        caption,
+                        i === 0 ? caption : undefined,
+                        schedule,
                     ),
                 matrixClient,
             );
-        }
+        });
         if (sentFileTypes.length) {
             // Find the most common type.
             const [type] = sentFileTypes.sort(
@@ -540,7 +539,7 @@ export default class ContentMessages {
                 eventName: "AttachmentSend",
                 isReply: !!replyToEvent,
                 inThread: relation?.rel_type === "m.thread",
-                count: okFiles.length,
+                count: filesToSend.length,
                 kind: "local",
                 type,
             });
@@ -596,6 +595,8 @@ export default class ContentMessages {
         replyToEvent: MatrixEvent | undefined,
         promBefore?: Promise<any>,
         caption?: string,
+        /** If set, upload now but keep the message to send later, together with the others in its batch. */
+        schedule?: { sendAt: number; batchId: string },
     ): Promise<void> {
         const fileName = file.name || _t("common|attachment");
         const content: Omit<MediaEventContent, "info"> & { info: Partial<MediaEventInfo> } = {
@@ -684,14 +685,25 @@ export default class ContentMessages {
             if (upload.cancelled) throw new UploadCanceledError();
             const threadId = relation?.rel_type === THREAD_RELATION_TYPE.name ? relation.event_id : null;
 
-            const response = await matrixClient.sendMessage(roomId, threadId ?? null, content as MediaEventContent);
+            if (schedule) {
+                scheduledMessages.schedule(
+                    roomId,
+                    threadId ?? null,
+                    content as MediaEventContent,
+                    schedule.sendAt,
+                    schedule.batchId,
+                );
+                dis.dispatch<UploadFinishedPayload>({ action: Action.UploadFinished, upload });
+            } else {
+                const response = await matrixClient.sendMessage(roomId, threadId ?? null, content as MediaEventContent);
 
-            if (SettingsStore.getValue("Performance.addSendMessageTimingMetadata")) {
-                sendRoundTripMetric(matrixClient, roomId, response.event_id);
+                if (SettingsStore.getValue("Performance.addSendMessageTimingMetadata")) {
+                    sendRoundTripMetric(matrixClient, roomId, response.event_id);
+                }
+
+                dis.dispatch<UploadFinishedPayload>({ action: Action.UploadFinished, upload });
+                dis.dispatch({ action: "message_sent" });
             }
-
-            dis.dispatch<UploadFinishedPayload>({ action: Action.UploadFinished, upload });
-            dis.dispatch({ action: "message_sent" });
         } catch (error) {
             // Unwrap UploadFailedError to get the underlying error
             const unwrappedError = error instanceof UploadFailedError && error.cause ? error.cause : error;

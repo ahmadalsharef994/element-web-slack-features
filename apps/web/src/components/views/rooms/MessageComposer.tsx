@@ -735,13 +735,13 @@ export class MessageComposer extends React.Component<IProps, IState> {
                                     toggleButtonMenu={this.toggleButtonMenu}
                                 />
                             )}
-                            {showSendButton &&
+                            {canSendMessages &&
                                 !this.state.haveRecording &&
                                 !this.state.isWysiwygLabEnabled &&
                                 !isLocalRoom(this.props.room) && (
                                     <ScheduleSendButton
                                         key="controls_schedule"
-                                        roomId={this.props.room.roomId}
+                                        canSchedule={!this.state.isComposerEmpty}
                                         onSchedule={this.scheduleMessage}
                                     />
                                 )}

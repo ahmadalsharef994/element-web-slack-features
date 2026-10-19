@@ -14,8 +14,11 @@ import BaseDialog from "./BaseDialog";
 import DialogButtons from "../elements/DialogButtons";
 import Field from "../elements/Field";
 import { fileSize } from "../../../utils/FileUtils";
+import Modal from "../../../Modal";
+import SchedulePickerDialog from "./SchedulePickerDialog";
 import {
     attachmentIcon,
+    type ImageSize,
     type MediaPreviewGroupEntry,
     type MediaPreviewGroupEntryContent,
     MediaPreviewGroupPreview,
@@ -24,13 +27,12 @@ import {
 import { MediaPreviewGroupViewModel } from "../../../viewmodels/message-body/MediaPreviewGroupViewModel";
 
 interface IProps {
-    file: File;
-    /** Defaults to 0. */
-    currentIndex?: number;
-    /** Defaults to 1. */
-    totalFiles?: number;
-    /** `caption` is the text to send with the file, if any. */
-    onFinished: (uploadConfirmed: boolean, uploadAll?: boolean, caption?: string) => void;
+    files: File[];
+    /**
+     * `caption` is the text to send with the first file, if any. `sendAt` is the time to send at,
+     * as a timestamp in ms, when the person chose to schedule instead of sending now.
+     */
+    onFinished: (uploadConfirmed: boolean, caption?: string, sendAt?: number) => void;
 }
 
 const previewableFormats = ["video", "audio", "image"];
@@ -44,7 +46,12 @@ function formatIsPreviewable(mimetype: string): boolean {
 /**
  * objectUrl should only be undefined if mimetype is text
  */
-function computePreviewContent(mimeType: string, fileName: string, objectUrl?: string): MediaPreviewGroupEntryContent {
+function computePreviewContent(
+    mimeType: string,
+    fileName: string,
+    objectUrl: string | undefined,
+    size: ImageSize,
+): MediaPreviewGroupEntryContent {
     if (objectUrl === undefined)
         return {
             type: "text",
@@ -54,14 +61,14 @@ function computePreviewContent(mimeType: string, fileName: string, objectUrl?: s
         case "image":
             return {
                 type: "image",
-                imageSize: "tallbanner",
+                imageSize: size,
                 image: objectUrl,
                 imageAlt: fileName,
             };
         case "video":
             return {
                 type: "video",
-                videoSize: "tallbanner",
+                videoSize: size,
                 video: objectUrl,
             };
         case "audio":
@@ -77,45 +84,35 @@ function computePreviewContent(mimeType: string, fileName: string, objectUrl?: s
 }
 
 /**
- * Owns the object URL used for the preview so that its lifetime is tied to the lifetime of the
- * view-model: it is revoked when the view-model is disposed, i.e. when the dialog unmounts.
+ * Owns the object URLs used for the previews so that their lifetime is tied to the lifetime of the
+ * view-model: they are revoked when the view-model is disposed, i.e. when the dialog unmounts.
  */
 class UploadPreviewViewModel extends MediaPreviewGroupViewModel {
-    public constructor(file: File) {
-        const mimeType = file.type;
-        const objectUrl = formatIsPreviewable(mimeType) ? URL.createObjectURL(file) : undefined;
+    public constructor(files: File[]) {
+        const objectUrls = files.map((file) =>
+            formatIsPreviewable(file.type) ? URL.createObjectURL(file) : undefined,
+        );
 
-        const preview: MediaPreviewGroupEntry = {
-            id: file.name,
+        const entries: MediaPreviewGroupEntry[] = files.map((file, i) => ({
+            // The index keeps the id unique when several files have the same name, e.g. pasted images
+            id: `${i}-${file.name}`,
             header: file.name,
             body: fileSize(file.size),
-            ...attachmentIcon(mimeType),
-            ...computePreviewContent(mimeType, file.name, objectUrl),
-        };
+            ...attachmentIcon(file.type),
+            // Several previews share the dialog, so keep each one short
+            ...computePreviewContent(file.type, file.name, objectUrls[i], files.length > 1 ? "banner" : "tallbanner"),
+        }));
 
-        super({ entries: [preview] });
+        super({ entries });
 
-        if (objectUrl !== undefined) this.disposables.track(() => URL.revokeObjectURL(objectUrl));
+        for (const objectUrl of objectUrls) {
+            if (objectUrl !== undefined) this.disposables.track(() => URL.revokeObjectURL(objectUrl));
+        }
     }
 }
 
-export default function UploadConfirmDialog({
-    file,
-    currentIndex = 0,
-    totalFiles = 1,
-    onFinished,
-}: IProps): JSX.Element {
-    const vm = useCreateAutoDisposedViewModel(() => new UploadPreviewViewModel(file));
-
-    let title: string;
-    if (totalFiles > 1 && currentIndex !== undefined) {
-        title = _t("upload_file|title_progress", {
-            current: currentIndex + 1,
-            total: totalFiles,
-        });
-    } else {
-        title = _t("upload_file|title");
-    }
+export default function UploadConfirmDialog({ files, onFinished }: IProps): JSX.Element {
+    const vm = useCreateAutoDisposedViewModel(() => new UploadPreviewViewModel(files));
 
     const onCancelClick = useCallback((): void => {
         onFinished(false);
@@ -124,11 +121,13 @@ export default function UploadConfirmDialog({
     const [caption, setCaption] = useState("");
 
     const onUploadClick = useCallback((): void => {
-        onFinished(true, false, caption.trim() || undefined);
+        onFinished(true, caption.trim() || undefined);
     }, [onFinished, caption]);
 
-    const onUploadAllClick = useCallback((): void => {
-        onFinished(true, true, caption.trim() || undefined);
+    const onScheduleClick = useCallback(async (): Promise<void> => {
+        const { finished } = Modal.createDialog(SchedulePickerDialog);
+        const [confirmed, sendAt] = await finished;
+        if (confirmed && sendAt) onFinished(true, caption.trim() || undefined, sendAt);
     }, [onFinished, caption]);
 
     const onCaptionKeyDown = useCallback(
@@ -141,21 +140,12 @@ export default function UploadConfirmDialog({
         [onUploadClick],
     );
 
-    let uploadAllButton: JSX.Element | undefined;
-    if (currentIndex + 1 < totalFiles) {
-        uploadAllButton = (
-            <button onClick={onUploadAllClick} className="mx_LegacyDialogButton" type="button">
-                {_t("upload_file|upload_all_button")}
-            </button>
-        );
-    }
-
     return (
         <BaseDialog
             className="mx_UploadConfirmDialog"
             fixedWidth={false}
             onFinished={onCancelClick}
-            title={title}
+            title={_t("upload_file|title")}
             contentId="mx_Dialog_content"
         >
             <div id="mx_Dialog_content">
@@ -180,7 +170,9 @@ export default function UploadConfirmDialog({
                 onPrimaryButtonClick={onUploadClick}
                 focus={true}
             >
-                {uploadAllButton}
+                <button onClick={() => void onScheduleClick()} className="mx_LegacyDialogButton" type="button">
+                    {_t("schedule_send|picker_confirm")}
+                </button>
             </DialogButtons>
         </BaseDialog>
     );

@@ -294,19 +294,12 @@ describe("BasicMessageComposer formatting toolbar", () => {
     });
 
     afterEach(async () => {
-        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", false);
         await setSetting("MessageComposerInput.useMarkdown", true);
         SettingsStore.reset();
     });
 
-    it("is docked by default", () => {
-        renderComposer(new EditorModel([], pc, renderer));
-
-        expect(screen.getByRole("toolbar", { name: "Formatting" })).toHaveClass("mx_MessageComposerFormatBar_docked");
-    });
-
-    it("floats over the selection when the setting is off", async () => {
-        await setSetting("MessageComposerInput.alwaysShowFormatBar", false);
+    it("floats over the selection by default", () => {
         renderComposer(new EditorModel([], pc, renderer));
 
         expect(screen.getByRole("toolbar", { name: "Formatting", hidden: true })).not.toHaveClass(
@@ -314,7 +307,15 @@ describe("BasicMessageComposer formatting toolbar", () => {
         );
     });
 
+    it("is docked when the setting is on", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
+        renderComposer(new EditorModel([], pc, renderer));
+
+        expect(screen.getByRole("toolbar", { name: "Formatting" })).toHaveClass("mx_MessageComposerFormatBar_docked");
+    });
+
     it("is not docked when Markdown is off, as the buttons would do nothing", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
         await setSetting("MessageComposerInput.useMarkdown", false);
         renderComposer(new EditorModel([], pc, renderer));
 
@@ -325,16 +326,18 @@ describe("BasicMessageComposer formatting toolbar", () => {
 
     it("follows the setting without a remount", async () => {
         renderComposer(new EditorModel([], pc, renderer));
-        const toolbar = screen.getByRole("toolbar", { name: "Formatting" });
-
-        await act(() => setSetting("MessageComposerInput.alwaysShowFormatBar", false));
+        const toolbar = screen.getByRole("toolbar", { name: "Formatting", hidden: true });
         expect(toolbar).not.toHaveClass("mx_MessageComposerFormatBar_docked");
 
         await act(() => setSetting("MessageComposerInput.alwaysShowFormatBar", true));
         expect(toolbar).toHaveClass("mx_MessageComposerFormatBar_docked");
+
+        await act(() => setSetting("MessageComposerInput.alwaysShowFormatBar", false));
+        expect(toolbar).not.toHaveClass("mx_MessageComposerFormatBar_docked");
     });
 
     it("formats the word at the caret and hands focus back to the input", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
         const model = new EditorModel([], pc, renderer);
         renderComposer(model);
         const input = screen.getByRole("textbox");
@@ -351,6 +354,7 @@ describe("BasicMessageComposer formatting toolbar", () => {
     });
 
     it("only brings focus back to the input when the selection is somewhere else", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
         const model = new EditorModel([], pc, renderer);
         renderComposer(model);
         const input = screen.getByRole("textbox");
@@ -369,7 +373,8 @@ describe("BasicMessageComposer formatting toolbar", () => {
         elsewhere.remove();
     });
 
-    it("does not format a disabled composer", () => {
+    it("does not format a disabled composer", async () => {
+        await setSetting("MessageComposerInput.alwaysShowFormatBar", true);
         const model = new EditorModel([pc.plain("hello")], pc, renderer);
         renderComposer(model, true);
         const textNode = document.createTreeWalker(screen.getByRole("textbox"), NodeFilter.SHOW_TEXT).nextNode()!;

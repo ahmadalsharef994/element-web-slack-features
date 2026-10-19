@@ -9,7 +9,7 @@ Please see LICENSE files in the repository root for full details.
 
 // @vitest-environment happy-dom
 
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach, type MockInstance } from "vitest";
 import "vitest-canvas-mock";
 import {
     type ISendEventResponse,
@@ -31,6 +31,7 @@ import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import UploadConfirmDialog from "./components/views/dialogs/UploadConfirmDialog";
 import { _t } from "./languageHandler";
 import { PosthogAnalytics } from "./PosthogAnalytics";
+import { scheduledMessages } from "./utils/scheduledMessages";
 
 vi.mock("matrix-encrypt-attachment", () => ({ default: { encryptAttachment: vi.fn().mockResolvedValue({}) } }));
 
@@ -141,6 +142,57 @@ describe("ContentMessages", () => {
             const content = vi.mocked(client.sendMessage).mock.calls[0][2];
             expect(content.body).toBe("fileName");
             expect(content).not.toHaveProperty("filename");
+        });
+
+        describe("when scheduled", () => {
+            const file = new File([], "fileName", { type: "image/jpeg" });
+            let schedule: ReturnType<typeof vi.spyOn>;
+
+            beforeEach(() => {
+                vi.mocked(client.uploadContent).mockResolvedValue({ content_uri: "mxc://server/file" });
+                schedule = vi.spyOn(scheduledMessages, "schedule").mockReturnValue({} as any);
+            });
+
+            it("should upload now but keep the message to send later", async () => {
+                await contentMessages.sendContentToRoom(file, roomId, undefined, client, undefined, undefined, "hi", {
+                    sendAt: 5000,
+                    batchId: "batch",
+                });
+
+                expect(client.uploadContent).toHaveBeenCalled();
+                expect(client.sendMessage).not.toHaveBeenCalled();
+                expect(schedule).toHaveBeenCalledWith(
+                    roomId,
+                    null,
+                    expect.objectContaining({
+                        msgtype: "m.image",
+                        url: "mxc://server/file",
+                        body: "hi",
+                        filename: "fileName",
+                    }),
+                    5000,
+                    "batch",
+                );
+            });
+
+            it("should schedule into the thread it was sent from", async () => {
+                const relation = { rel_type: "m.thread", event_id: "$thread" } as any;
+                await contentMessages.sendContentToRoom(
+                    file,
+                    roomId,
+                    relation,
+                    client,
+                    undefined,
+                    undefined,
+                    undefined,
+                    {
+                        sendAt: 5000,
+                        batchId: "batch",
+                    },
+                );
+
+                expect(schedule).toHaveBeenCalledWith(roomId, "$thread", expect.anything(), 5000, "batch");
+            });
         });
 
         it("should use m.image for PNG files which cannot be parsed but successfully thumbnail", async () => {
@@ -514,10 +566,10 @@ describe("sendContentListToRoom analytics", () => {
         contentMessages = new ContentMessages();
         vi.spyOn(contentMessages, "sendContentToRoom").mockResolvedValue(undefined);
         trackEvent = vi.spyOn(PosthogAnalytics.instance, "trackEvent").mockImplementation(() => {});
-        // Automatically continue through the per-file confirmation dialog.
+        // Automatically continue through the confirmation dialog.
         vi.spyOn(Modal, "createDialog").mockImplementation((component: unknown, ...rest: any[]) => {
             if (component === UploadConfirmDialog) {
-                return { finished: Promise.resolve([true, false]) } as any;
+                return { finished: Promise.resolve([true]) } as any;
             }
             // Any other dialog (e.g. the fetching-media-config spinner) never resolves on its own.
             return { finished: new Promise(() => {}), close: vi.fn() } as any;
@@ -546,6 +598,41 @@ describe("sendContentListToRoom analytics", () => {
         );
     });
 
+    /** Answers the upload confirmation dialog, and leaves any other dialog (e.g. the spinner) open. */
+    function answerUploadDialog(...result: unknown[]): MockInstance<typeof Modal.createDialog> {
+        return vi.spyOn(Modal, "createDialog").mockImplementation((component: unknown) => {
+            if (component === UploadConfirmDialog) return { finished: Promise.resolve(result) } as any;
+            return { finished: new Promise(() => {}), close: vi.fn() } as any;
+        });
+    }
+
+    it("asks once for all the files, and puts the caption on the first", async () => {
+        const createDialog = answerUploadDialog(true, "holiday");
+        const files = [mkFile("image/png", "a.png"), mkFile("image/png", "b.png"), mkFile("image/png", "c.png")];
+        await contentMessages.sendContentListToRoom(files, roomId, undefined, undefined, client);
+
+        const asked = createDialog.mock.calls.filter(([component]) => component === UploadConfirmDialog);
+        expect(asked).toEqual([[UploadConfirmDialog, { files }]]);
+        const calls = vi.mocked(contentMessages.sendContentToRoom).mock.calls;
+        expect(calls.map((c) => [(c[0] as File).name, c[6], c[7]])).toEqual([
+            ["a.png", "holiday", undefined],
+            ["b.png", undefined, undefined],
+            ["c.png", undefined, undefined],
+        ]);
+    });
+
+    it("schedules all the files together when a time was chosen", async () => {
+        answerUploadDialog(true, "later", 5000);
+        const files = [mkFile("image/png", "a.png"), mkFile("image/png", "b.png")];
+        await contentMessages.sendContentListToRoom(files, roomId, undefined, undefined, client);
+
+        const calls = vi.mocked(contentMessages.sendContentToRoom).mock.calls;
+        expect(calls).toHaveLength(2);
+        const [first, second] = calls.map((c) => c[7]);
+        expect(first).toEqual({ sendAt: 5000, batchId: expect.any(String) });
+        expect(second).toBe(first);
+    });
+
     it("marks the attachment as a reply and in-thread when applicable", async () => {
         const replyToEvent = { getId: () => "$event" } as any;
         const relation = { rel_type: "m.thread" } as any;
@@ -563,7 +650,7 @@ describe("sendContentListToRoom analytics", () => {
     it("tracks AttachmentCancel when the user cancels at the confirmation dialog", async () => {
         vi.spyOn(Modal, "createDialog").mockImplementation((component: unknown) => {
             if (component === UploadConfirmDialog) {
-                return { finished: Promise.resolve([false, false]) } as any;
+                return { finished: Promise.resolve([false]) } as any;
             }
             return { finished: new Promise(() => {}), close: vi.fn() } as any;
         });

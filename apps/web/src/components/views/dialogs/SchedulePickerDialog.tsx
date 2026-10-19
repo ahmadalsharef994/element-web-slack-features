@@ -13,8 +13,16 @@ import DialogButtons from "../elements/DialogButtons";
 import Field from "../elements/Field";
 
 interface IProps {
-    /** `sendAt` is the chosen time as a timestamp in ms, when confirmed. */
-    onFinished: (confirmed: boolean, sendAt?: number) => void;
+    /** The time to start from, as a timestamp in ms. Defaults to an hour from now. */
+    sendAt?: number;
+    /** Shows a field for the text, starting with this, so a scheduled message can be edited. */
+    text?: string;
+    /** Label of the text field. Defaults to "Message". */
+    textLabel?: string;
+    /** Whether the text can be left empty. Defaults to false. */
+    textOptional?: boolean;
+    /** `sendAt` is the chosen time as a timestamp in ms and `text` the edited text, when confirmed. */
+    onFinished: (confirmed: boolean, sendAt?: number, text?: string) => void;
 }
 
 /** The value `<input type="datetime-local">` expects, in local time. */
@@ -23,33 +31,53 @@ function toInputValue(date: Date): string {
     return local.toISOString().slice(0, 16);
 }
 
-/** Asks for the date and time to send a message at. */
-export default function SchedulePickerDialog({ onFinished }: IProps): JSX.Element {
-    const [value, setValue] = useState(() => toInputValue(new Date(Date.now() + 60 * 60 * 1000)));
+/** Asks for the date and time to send a message at, and when editing one, for its text too. */
+export default function SchedulePickerDialog({
+    sendAt: initialSendAt,
+    text: initialText,
+    textLabel,
+    textOptional,
+    onFinished,
+}: IProps): JSX.Element {
+    const editing = initialText !== undefined;
+    // Read once, as a time that passes while the dialog is open is still sent, straight away
+    const [openedAt] = useState(() => Date.now());
+    const [value, setValue] = useState(() => toInputValue(new Date(initialSendAt ?? openedAt + 60 * 60 * 1000)));
+    const [text, setText] = useState(initialText ?? "");
     const sendAt = new Date(value).getTime();
-    const valid = Number.isFinite(sendAt) && sendAt > Date.now();
+    const timeValid = Number.isFinite(sendAt) && sendAt > openedAt;
+    const valid = timeValid && (!editing || textOptional || text.trim() !== "");
 
     return (
         <BaseDialog
             className="mx_SchedulePickerDialog"
-            title={_t("schedule_send|picker_title")}
+            title={editing ? _t("schedule_send|edit_title") : _t("schedule_send|picker_title")}
             onFinished={() => onFinished(false)}
             fixedWidth={false}
         >
             <div className="mx_Dialog_content">
+                {editing && (
+                    <Field
+                        element="textarea"
+                        label={textLabel ?? _t("schedule_send|text_label")}
+                        value={text}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setText(e.target.value)}
+                        autoFocus={true}
+                    />
+                )}
                 <Field
                     type="datetime-local"
                     label={_t("schedule_send|picker_label")}
                     value={value}
-                    min={toInputValue(new Date())}
+                    min={toInputValue(new Date(openedAt))}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
                 />
-                {!valid && <p role="alert">{_t("schedule_send|picker_past")}</p>}
+                {!timeValid && <p role="alert">{_t("schedule_send|picker_past")}</p>}
             </div>
             <DialogButtons
-                primaryButton={_t("schedule_send|picker_confirm")}
+                primaryButton={editing ? _t("action|save") : _t("schedule_send|picker_confirm")}
                 primaryDisabled={!valid}
-                onPrimaryButtonClick={() => onFinished(true, sendAt)}
+                onPrimaryButtonClick={() => onFinished(true, sendAt, editing ? text.trim() : undefined)}
                 onCancel={() => onFinished(false)}
             />
         </BaseDialog>

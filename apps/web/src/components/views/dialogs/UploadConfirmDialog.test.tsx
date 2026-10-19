@@ -13,6 +13,7 @@ import { secureRandomString } from "matrix-js-sdk/src/randomstring";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import UploadConfirmDialog from "./UploadConfirmDialog.tsx";
+import Modal from "../../../Modal";
 
 /**
  * The shared media preview tile hides the image until it has loaded it once out of band, which jsdom
@@ -78,9 +79,7 @@ describe("<UploadConfirmDialog />", () => {
         vi.spyOn(URL, "createObjectURL").mockReturnValue(url);
 
         const file = new File([secureRandomString(1024 * 124)], "image.png", { type: "image/png" });
-        const { asFragment, getByRole } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={vi.fn()} />,
-        );
+        const { asFragment, getByRole } = render(<UploadConfirmDialog files={[file]} onFinished={vi.fn()} />);
 
         // The preview labels the image with the file name.
         await waitFor(() => expect(getByRole("img", { name: "image.png" })).toHaveAttribute("src", url));
@@ -94,18 +93,14 @@ describe("<UploadConfirmDialog />", () => {
         vi.spyOn(URL, "createObjectURL").mockReturnValue(url);
 
         const file = new File([secureRandomString(1024 * 124)], name, { type });
-        const { container } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={vi.fn()} />,
-        );
+        const { container } = render(<UploadConfirmDialog files={[file]} onFinished={vi.fn()} />);
 
         await waitFor(() => expect(container.querySelector(tag)).toHaveAttribute("src", url));
     });
 
     it("should display a file with no media preview", () => {
         const file = new File(["hello"], "notes.txt", { type: "text/plain" });
-        const { container, getByText } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={vi.fn()} />,
-        );
+        const { container, getByText } = render(<UploadConfirmDialog files={[file]} onFinished={vi.fn()} />);
 
         expect(getByText("notes.txt")).toBeInTheDocument();
         expect(container.querySelector("img, video, audio")).toBeNull();
@@ -114,39 +109,84 @@ describe("<UploadConfirmDialog />", () => {
     it("should pass the trimmed caption when uploading", () => {
         const onFinished = vi.fn();
         const file = new File(["hello"], "notes.txt", { type: "text/plain" });
-        const { getByLabelText, getByText } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={onFinished} />,
-        );
+        const { getByLabelText, getByText } = render(<UploadConfirmDialog files={[file]} onFinished={onFinished} />);
 
         fireEvent.change(getByLabelText("Add a caption (optional)"), { target: { value: "  hi  " } });
         fireEvent.click(getByText("Upload"));
 
-        expect(onFinished).toHaveBeenCalledWith(true, false, "hi");
+        expect(onFinished).toHaveBeenCalledWith(true, "hi");
     });
 
     it("should upload with the caption when pressing Enter in the caption field", () => {
         const onFinished = vi.fn();
         const file = new File(["hello"], "notes.txt", { type: "text/plain" });
-        const { getByLabelText } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={onFinished} />,
-        );
+        const { getByLabelText } = render(<UploadConfirmDialog files={[file]} onFinished={onFinished} />);
 
         const input = getByLabelText("Add a caption (optional)");
         fireEvent.change(input, { target: { value: "hello" } });
         fireEvent.keyDown(input, { key: "Enter" });
 
-        expect(onFinished).toHaveBeenCalledWith(true, false, "hello");
+        expect(onFinished).toHaveBeenCalledWith(true, "hello");
     });
 
     it("should not pass a caption when the field is empty", () => {
         const onFinished = vi.fn();
         const file = new File(["hello"], "notes.txt", { type: "text/plain" });
-        const { getByText } = render(
-            <UploadConfirmDialog file={file} currentIndex={0} totalFiles={1} onFinished={onFinished} />,
-        );
+        const { getByText } = render(<UploadConfirmDialog files={[file]} onFinished={onFinished} />);
 
         fireEvent.click(getByText("Upload"));
 
-        expect(onFinished).toHaveBeenCalledWith(true, false, undefined);
+        expect(onFinished).toHaveBeenCalledWith(true, undefined);
+    });
+
+    it("should preview every file and caption them together", () => {
+        const onFinished = vi.fn();
+        // Two files with the same name, as when pasting images
+        const files = [
+            new File(["a"], "image.png", { type: "image/png" }),
+            new File(["b"], "image.png", { type: "image/png" }),
+            new File(["c"], "notes.txt", { type: "text/plain" }),
+        ];
+        const { getAllByText, getByText, getByLabelText } = render(
+            <UploadConfirmDialog files={files} onFinished={onFinished} />,
+        );
+
+        expect(getAllByText("image.png")).toHaveLength(2);
+        expect(getByText("notes.txt")).toBeInTheDocument();
+
+        fireEvent.change(getByLabelText("Add a caption (optional)"), { target: { value: "holiday" } });
+        fireEvent.click(getByText("Upload"));
+        expect(onFinished).toHaveBeenCalledTimes(1);
+        expect(onFinished).toHaveBeenCalledWith(true, "holiday");
+    });
+
+    describe("scheduling", () => {
+        const file = new File(["hello"], "notes.txt", { type: "text/plain" });
+
+        it("should pass the chosen time and the caption", async () => {
+            vi.spyOn(Modal, "createDialog").mockReturnValue({ finished: Promise.resolve([true, 1234]) } as any);
+            const onFinished = vi.fn();
+            const { getByLabelText, getByText } = render(
+                <UploadConfirmDialog files={[file]} onFinished={onFinished} />,
+            );
+
+            fireEvent.change(getByLabelText("Add a caption (optional)"), { target: { value: "later" } });
+            fireEvent.click(getByText("Schedule"));
+
+            await waitFor(() => expect(onFinished).toHaveBeenCalledWith(true, "later", 1234));
+        });
+
+        it("should keep the dialog open when no time is chosen", async () => {
+            const createDialog = vi
+                .spyOn(Modal, "createDialog")
+                .mockReturnValue({ finished: Promise.resolve([false]) } as any);
+            const onFinished = vi.fn();
+            const { getByText } = render(<UploadConfirmDialog files={[file]} onFinished={onFinished} />);
+
+            fireEvent.click(getByText("Schedule"));
+
+            await waitFor(() => expect(createDialog).toHaveBeenCalled());
+            expect(onFinished).not.toHaveBeenCalled();
+        });
     });
 });
