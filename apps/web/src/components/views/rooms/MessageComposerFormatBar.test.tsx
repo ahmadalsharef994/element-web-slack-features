@@ -9,9 +9,9 @@ Please see LICENSE in the repository root for full details.
 
 import React, { createRef } from "react";
 import { describe, it, expect, vi } from "vitest";
-import { act, render, screen } from "test-utils-rtl";
+import { act, fireEvent, render, screen } from "test-utils-rtl";
 
-import MessageComposerFormatBar from "./MessageComposerFormatBar";
+import MessageComposerFormatBar, { Formatting } from "./MessageComposerFormatBar";
 
 describe("MessageComposerFormatBar", () => {
     const selectionRect = new DOMRect(40, 100, 20, 10);
@@ -43,10 +43,24 @@ describe("MessageComposerFormatBar", () => {
         expect(toolbar.style.top).toBe("");
     });
 
-    it("marks only the heading button as added by Ahmad", () => {
+    it("marks only the buttons added by Ahmad", () => {
         renderBar(true);
 
-        expect(screen.getByRole("button", { name: "Heading" })).toHaveClass("mx_AddedByAhmad_inline");
+        for (const name of ["Heading", "Bulleted list", "Numbered list"]) {
+            expect(screen.getByRole("button", { name })).toHaveClass("mx_AddedByAhmad_inline");
+        }
         expect(screen.getByRole("button", { name: "Bold" })).not.toHaveClass("mx_AddedByAhmad_inline");
+    });
+
+    it.each([
+        ["Bulleted list", Formatting.BulletList],
+        ["Numbered list", Formatting.NumberedList],
+    ])("asks for %s formatting when its button is clicked", (name, formatting) => {
+        const onAction = vi.fn();
+        render(<MessageComposerFormatBar shortcuts={{}} onAction={onAction} docked />);
+
+        fireEvent.click(screen.getByRole("button", { name }));
+
+        expect(onAction).toHaveBeenCalledWith(formatting);
     });
 });

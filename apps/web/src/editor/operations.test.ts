@@ -64,6 +64,62 @@ describe("editor/operations: formatting operations", () => {
         });
     });
 
+    describe("formatRangeAsList", () => {
+        const textOf = (model: EditorModel): string =>
+            model
+                .serializeParts()
+                .map((p) => p.text)
+                .join("");
+        const selectAll = (model: EditorModel, length: number): ReturnType<EditorModel["startRange"]> =>
+            model.startRange(model.positionForOffset(0, false), model.positionForOffset(length, false));
+
+        it("should make every selected line a bullet", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.plain("two")], pc, renderer);
+            formatRange(selectAll(model, 7), Formatting.BulletList);
+            expect(textOf(model)).toBe("- one\n- two");
+        });
+
+        it("should number the selected lines from 1", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.plain("two")], pc, renderer);
+            formatRange(selectAll(model, 7), Formatting.NumberedList);
+            expect(textOf(model)).toBe("1. one\n2. two");
+        });
+
+        it("should take the markers off when every line already has them", () => {
+            const model = new EditorModel([pc.plain("- one"), pc.newline(), pc.plain("- two")], pc, renderer);
+            formatRange(selectAll(model, 11), Formatting.BulletList);
+            expect(textOf(model)).toBe("one\ntwo");
+
+            const numbered = new EditorModel([pc.plain("1. one"), pc.newline(), pc.plain("2. two")], pc, renderer);
+            formatRange(selectAll(numbered, 13), Formatting.NumberedList);
+            expect(textOf(numbered)).toBe("one\ntwo");
+        });
+
+        it("should change a bulleted list into a numbered one", () => {
+            const model = new EditorModel([pc.plain("- one"), pc.newline(), pc.plain("- two")], pc, renderer);
+            formatRange(selectAll(model, 11), Formatting.NumberedList);
+            expect(textOf(model)).toBe("1. one\n2. two");
+        });
+
+        it("should finish a half-done list instead of removing it", () => {
+            const model = new EditorModel([pc.plain("- one"), pc.newline(), pc.plain("two")], pc, renderer);
+            formatRange(selectAll(model, 9), Formatting.BulletList);
+            expect(textOf(model)).toBe("- one\n- two");
+        });
+
+        it("should skip empty lines, and number only the lines with text", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.newline(), pc.plain("two")], pc, renderer);
+            formatRange(selectAll(model, 8), Formatting.NumberedList);
+            expect(textOf(model)).toBe("1. one\n\n2. two");
+        });
+
+        it("should act on the caret's whole line", () => {
+            const model = new EditorModel([pc.plain("one"), pc.newline(), pc.plain("hello world")], pc, renderer);
+            formatRange(model.startRange(model.positionForOffset(15, false)), Formatting.BulletList);
+            expect(textOf(model)).toBe("one\n- hello world");
+        });
+    });
+
     describe("formatRangeAsHeading", () => {
         it("should add and remove a heading marker on a line", () => {
             const model = new EditorModel([pc.plain("hello")], pc, renderer);

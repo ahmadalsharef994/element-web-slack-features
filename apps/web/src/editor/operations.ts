@@ -23,7 +23,12 @@ import { longestBacktickSequence } from "./deserialize";
 export function formatRange(range: Range, action: Formatting): void {
     // If the selection was empty we select the current word instead, or the whole line for block formats
     if (range.wasInitializedEmpty()) {
-        if (action === Formatting.Heading || action === Formatting.Quote) {
+        if (
+            action === Formatting.Heading ||
+            action === Formatting.Quote ||
+            action === Formatting.BulletList ||
+            action === Formatting.NumberedList
+        ) {
             selectRangeOfLineAtCaret(range);
         } else {
             selectRangeOfWordAtCaret(range);
@@ -57,6 +62,12 @@ export function formatRange(range: Range, action: Formatting): void {
             break;
         case Formatting.Heading:
             formatRangeAsHeading(range);
+            break;
+        case Formatting.BulletList:
+            formatRangeAsList(range, false);
+            break;
+        case Formatting.NumberedList:
+            formatRangeAsList(range, true);
             break;
         case Formatting.InsertLink:
             formatRangeAsLink(range);
@@ -208,6 +219,43 @@ export function formatRangeAsHeading(range: Range): void {
         for (const i of lineStarts.reverse()) parts.splice(i, 0, partCreator.plain("# "));
         if (!rangeStartsAtBeginningOfLine(range)) parts.unshift(partCreator.newline());
     }
+    replaceRangeAndExpandSelection(range, parts);
+}
+
+const BULLET_MARKER = /^[-*+] /;
+const NUMBER_MARKER = /^\d+\. /;
+
+/**
+ * Makes every line in the range an item of a bulleted or numbered list. If all the lines already are items of that
+ * kind of list, the markers come off instead. Lines in the other kind of list change over to this one.
+ */
+export function formatRangeAsList(range: Range, numbered: boolean): void {
+    const { model, parts } = range;
+    const { partCreator } = model;
+    const lineStarts = parts
+        .map((_, i) => i)
+        .filter((i) => parts[i].type !== Type.Newline && (i === 0 || parts[i - 1].type === Type.Newline));
+
+    const marker = numbered ? NUMBER_MARKER : BULLET_MARKER;
+    const remove = lineStarts.every((i) => marker.test(parts[i].text));
+
+    // From the last line to the first, so the earlier indexes stay valid
+    for (let line = lineStarts.length - 1; line >= 0; line--) {
+        const i = lineStarts[line];
+        const stripped = parts[i].text.replace(BULLET_MARKER, "").replace(NUMBER_MARKER, "");
+        if (stripped !== parts[i].text) {
+            const serialized = parts[i].serialize();
+            serialized.text = stripped;
+            const part = stripped ? partCreator.deserializePart(serialized) : undefined;
+            if (part) {
+                parts[i] = part;
+            } else {
+                parts.splice(i, 1);
+            }
+        }
+        if (!remove) parts.splice(i, 0, partCreator.plain(numbered ? `${line + 1}. ` : "- "));
+    }
+    if (!remove && !rangeStartsAtBeginningOfLine(range)) parts.unshift(partCreator.newline());
     replaceRangeAndExpandSelection(range, parts);
 }
 

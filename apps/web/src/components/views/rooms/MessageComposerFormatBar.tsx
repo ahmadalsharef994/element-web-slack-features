@@ -15,6 +15,8 @@ import {
     InlineCodeIcon,
     QuoteIcon,
     LinkIcon,
+    ListBulletedIcon,
+    ListNumberedIcon,
     TextFormattingIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 
@@ -29,6 +31,8 @@ export enum Formatting {
     Code = "code",
     Quote = "quote",
     Heading = "heading",
+    BulletList = "bullet_list",
+    NumberedList = "numbered_list",
     InsertLink = "insert_link",
 }
 
@@ -98,6 +102,18 @@ export default class MessageComposerFormatBar extends React.PureComponent<IProps
                     onClick={() => this.props.onAction(Formatting.Quote)}
                     icon={<QuoteIcon />}
                     shortcut={this.props.shortcuts.quote}
+                />
+                <FormatButton
+                    label={_t("composer|format_unordered_list")}
+                    onClick={() => this.props.onAction(Formatting.BulletList)}
+                    icon={<ListBulletedIcon />}
+                    addedByAhmad
+                />
+                <FormatButton
+                    label={_t("composer|format_ordered_list")}
+                    onClick={() => this.props.onAction(Formatting.NumberedList)}
+                    icon={<ListNumberedIcon />}
+                    addedByAhmad
                 />
                 <FormatButton
                     label={_t("composer|format_insert_link")}
