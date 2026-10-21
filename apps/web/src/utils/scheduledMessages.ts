@@ -62,7 +62,7 @@ function withText(content: RoomMessageEventContent, text: string): RoomMessageEv
         return (text ? { ...rest, body: text, filename: fileName } : { ...rest, body: fileName }) as typeof content;
     }
     // The body is the Markdown the person typed, so build the HTML again from it.
-    // ponytail: mention pills turn into plain names in the HTML, the mentions metadata is kept
+    // Mention pills become plain names in the HTML; the mentions metadata is kept
     const html = htmlSerializeFromMdIfNeeded(text);
     return (
         html ? { ...rest, body: text, format: "org.matrix.custom.html", formatted_body: html } : { ...rest, body: text }
@@ -77,8 +77,8 @@ const RETRY_DELAY_MS = 60 * 1000;
 /**
  * Keeps messages scheduled for later and sends them when their time comes.
  *
- * ponytail: the queue lives in this browser and only sends while Element is open. For sending
- * while closed, use delayed events (MSC4140) on servers that support them.
+ * The queue lives in this browser and only sends while Element is open. Sending while it is closed
+ * would need delayed events (MSC4140) on servers that support them.
  */
 export class ScheduledMessages extends TypedEventEmitter<"update", { update: () => void }> {
     public static readonly UPDATE = "update";
@@ -168,10 +168,11 @@ export class ScheduledMessages extends TypedEventEmitter<"update", { update: () 
      * Applies to everything scheduled with it.
      */
     public update(groupId: string, changes: { sendAt?: number; text?: string }): void {
+        const { sendAt, text } = changes;
         const group = this.messages.filter((m) => groupIdOf(m) === groupId);
-        if (changes.sendAt !== undefined) group.forEach((m) => (m.sendAt = changes.sendAt!));
+        if (sendAt !== undefined) group.forEach((m) => (m.sendAt = sendAt));
         // The text lives on the first event: the message itself, or the first photo
-        if (changes.text !== undefined && group.length > 0) group[0].content = withText(group[0].content, changes.text);
+        if (text !== undefined && group.length > 0) group[0].content = withText(group[0].content, text);
         this.save();
         group.forEach(this.arm);
     }

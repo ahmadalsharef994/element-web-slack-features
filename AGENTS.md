@@ -4,6 +4,22 @@ Instructions for AI coding agents working in this repository. Humans should read
 [CONTRIBUTING.md](./CONTRIBUTING.md) instead — this file summarises those and
 adds the things that are easy to get wrong here.
 
+## This fork
+
+This is Element Fork, Ahmad's fork of Element Web and Desktop. Fork notes live in `docs/fork/`:
+
+- **Adding or changing a user-facing feature:** give it an "added by Ahmad" marker in the UI and a row in
+  [docs/fork/ADDED_BY_AHMAD.md](./docs/fork/ADDED_BY_AHMAD.md), which lists the markers and everything the fork adds
+  on top of upstream. New files carry a `Copyright <year> Ahmad` header.
+- **Planning a feature from the roadmap:** [docs/fork/ENHANCEMENT_PLAN.md](./docs/fork/ENHANCEMENT_PLAN.md) has the
+  file maps, steps and gotchas for each one.
+- **Naming and branding:** the product name is "Element Fork". The Liberbyte name, wordmark and domains wait for the
+  CEO's approval; Liberbyte colours and style are already in use.
+- **Building the Linux desktop app:** `scripts/build-deb.sh` builds the web app and the `.deb` and installs it
+  (`--no-install` to only build).
+
+Keep upstream files where they are, so upstream changes still merge cleanly.
+
 ## Repository layout
 
 A pnpm + nx monorepo (`element-web-monorepo`). Workspaces are `apps/*`, `packages/*`, `modules` and `modules/*`.
@@ -191,3 +207,5 @@ Keep comments short and relevant.
 ## Pull requests
 
 - Don't open PR. This should be done by the human, not the agent.
+
+no auto comit, no coauthoered with claude trail

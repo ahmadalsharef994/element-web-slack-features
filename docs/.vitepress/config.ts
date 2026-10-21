@@ -34,6 +34,8 @@ function customPathResolver(href: string, currentPath: string): string {
 export default withMermaid({
     title: "Element Web & Desktop docs",
     description: "Documentation",
+    // Notes for this fork, which link to source files rather than to pages of the site
+    srcExclude: ["fork/**"],
     markdown: {
         config: (md) => {
             // Custom rule to fix links

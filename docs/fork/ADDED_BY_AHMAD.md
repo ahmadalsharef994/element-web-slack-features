@@ -9,11 +9,11 @@ upstream's. Upstream is the `develop` branch of element-hq/element-web. Everythi
 | Where                  | Marker                                                                                                                                                                             |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | New files              | Copyright header reads `Copyright <year> Ahmad`                                                                                                                                    |
-| UI, larger areas       | `mx_AddedByAhmad` class: accent border, tinted background and a "New · added by Ahmad" note underneath ([\_AddedByAhmad.pcss](apps/web/res/css/views/elements/_AddedByAhmad.pcss)) |
+| UI, larger areas       | `mx_AddedByAhmad` class: accent border, tinted background and a "New · added by Ahmad" note underneath ([\_AddedByAhmad.pcss](../../apps/web/res/css/views/elements/_AddedByAhmad.pcss)) |
 | UI, small buttons      | `mx_AddedByAhmad_inline` class: accent outline only. The tooltip carries the note, `_t("common\|added_by_ahmad")` = "New, added by Ahmad"                                          |
-| Shared components      | `styles.addedByAhmad` in the component's CSS module (see [UserMenu.module.css](packages/shared-components/src/menus/UserMenu/UserMenu.module.css))                                 |
+| Shared components      | `styles.addedByAhmad` in the component's CSS module (see [UserMenu.module.css](../../packages/shared-components/src/menus/UserMenu/UserMenu.module.css))                                 |
 | Text-only places       | The string ends in "(new, added by Ahmad)", e.g. menu entries, command descriptions and the theme name                                                                             |
-| Settings → Preferences | Add the setting key to `ADDED_BY_AHMAD` in [PreferencesUserSettingsTab.tsx](apps/web/src/components/views/settings/tabs/user/PreferencesUserSettingsTab.tsx)                       |
+| Settings → Preferences | Add the setting key to `ADDED_BY_AHMAD` in [PreferencesUserSettingsTab.tsx](../../apps/web/src/components/views/settings/tabs/user/PreferencesUserSettingsTab.tsx)                       |
 
 When adding a new feature: give it one of the markers above, give new files the Ahmad header, and add a row below.
 
