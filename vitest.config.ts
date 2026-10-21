@@ -44,10 +44,10 @@ export default defineConfig({
         include: /\.[cm]?tsx?$/,
     },
     test: {
-        projects: ["{apps,modules,packages}/*/vitest.config.ts"],
+        projects: ["{apps,packages}/*/vitest.config.ts"],
         coverage: {
             provider: "v8",
-            include: ["{apps,modules,packages}/*/src/**/*.{cts,ts,tsx}"],
+            include: ["{apps,packages}/*/src/**/*.{cts,ts,tsx}"],
             exclude: [
                 // Exclude test files
                 "**/*.{stories,test}.{ts,tsx}",

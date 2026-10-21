@@ -95,22 +95,6 @@ export default {
                 "gpg",
             ],
         },
-        "modules": {
-            project: ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,pcss}!", "!playwright/**!"],
-            ignoreDependencies: [
-                // Used by Playwright to serve the built web app.
-                "serve",
-            ],
-        },
-        "modules/*": {
-            entry: ["src/index.ts{x,}!"],
-            project: [
-                "**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,pcss}!",
-                "!src/tests/**!",
-                "!e2e/**!",
-                "!src/setupTests.ts!",
-            ],
-        },
         ".": {
             entry: ["scripts/**", "docs/**"],
         },
@@ -130,7 +114,7 @@ export default {
                 .join("\n"),
     },
     nx: {
-        config: ["{nx,package,project}.json", "{apps,packages,modules}/**/{package,project}.json"],
+        config: ["{nx,package,project}.json", "{apps,packages}/**/{package,project}.json"],
     },
     playwright: {
         config: ["playwright.config.ts", "playwright-merge.config.ts"],

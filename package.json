@@ -30,7 +30,6 @@
         "@nx-tools/nx-container": "^7.2.1",
         "@playwright/test": "catalog:",
         "@types/node": "25",
-        "@typescript/native": "catalog:",
         "@vitest/coverage-v8": "catalog:",
         "@vitest/ui": "catalog:",
         "eslint-plugin-element-call": "github:element-hq/element-call#main&path:/eslint",

@@ -7,7 +7,8 @@ Please see LICENSE files in the repository root for full details.
 */
 
 import type { Locator, Page } from "@playwright/test";
-import { CommandOrControl } from "../e2e/utils";
+
+const CommandOrControl = process.platform === "darwin" ? "Meta" : "Control";
 
 export enum Filter {
     People = "people",

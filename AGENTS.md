@@ -22,7 +22,7 @@ Keep upstream files where they are, so upstream changes still merge cleanly.
 
 ## Repository layout
 
-A pnpm + nx monorepo (`element-web-monorepo`). Workspaces are `apps/*`, `packages/*`, `modules` and `modules/*`.
+A pnpm + nx monorepo (`element-web-monorepo`). Workspaces are `apps/*` and `packages/*`.
 
 | Path                                                                                                  | Contents                                                                                                      |
 | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -30,7 +30,6 @@ A pnpm + nx monorepo (`element-web-monorepo`). Workspaces are `apps/*`, `package
 | `apps/desktop`                                                                                        | Element Desktop.                                                                                              |
 | `packages/shared-components`                                                                          | Published UI component library, `@element-hq/web-shared-components`. New views go here.                       |
 | `packages/module-api`, `packages/shared-utils`, `packages/shared-types`, `packages/playwright-common` | Published support packages.                                                                                   |
-| `modules/*`                                                                                           | Optional runtime modules (banner, widget toggles, …).                                                         |
 | `docs/`                                                                                               | VitePress docs site.                                                                                          |
 
 There is **no** top-level `playwright/` directory; `docs/playwright.md` uses paths relative to `apps/web`.

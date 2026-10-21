@@ -6,13 +6,13 @@ upstream's. Upstream is the `develop` branch of element-hq/element-web. Everythi
 
 ## How our work is marked
 
-| Where                  | Marker                                                                                                                                                                             |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New files              | Copyright header reads `Copyright <year> Ahmad`                                                                                                                                    |
+| Where                  | Marker                                                                                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New files              | Copyright header reads `Copyright <year> Ahmad`                                                                                                                                          |
 | UI, larger areas       | `mx_AddedByAhmad` class: accent border, tinted background and a "New · added by Ahmad" note underneath ([\_AddedByAhmad.pcss](../../apps/web/res/css/views/elements/_AddedByAhmad.pcss)) |
-| UI, small buttons      | `mx_AddedByAhmad_inline` class: accent outline only. The tooltip carries the note, `_t("common\|added_by_ahmad")` = "New, added by Ahmad"                                          |
+| UI, small buttons      | `mx_AddedByAhmad_inline` class: accent outline only. The tooltip carries the note, `_t("common\|added_by_ahmad")` = "New, added by Ahmad"                                                |
 | Shared components      | `styles.addedByAhmad` in the component's CSS module (see [UserMenu.module.css](../../packages/shared-components/src/menus/UserMenu/UserMenu.module.css))                                 |
-| Text-only places       | The string ends in "(new, added by Ahmad)", e.g. menu entries, command descriptions and the theme name                                                                             |
+| Text-only places       | The string ends in "(new, added by Ahmad)", e.g. menu entries, command descriptions and the theme name                                                                                   |
 | Settings → Preferences | Add the setting key to `ADDED_BY_AHMAD` in [PreferencesUserSettingsTab.tsx](../../apps/web/src/components/views/settings/tabs/user/PreferencesUserSettingsTab.tsx)                       |
 
 When adding a new feature: give it one of the markers above, give new files the Ahmad header, and add a row below.
@@ -54,3 +54,10 @@ These change how messages are written or shown, so a marker on them would end up
 
 Upstream CI workflows, issue templates, release tooling, git hooks, unused docs and scripts were removed. The fork
 plan is in [ENHANCEMENT_PLAN.md](ENHANCEMENT_PLAN.md).
+
+Also removed, as they only ran in upstream's CI or were never loaded:
+
+- The upstream Playwright e2e suite. Only our `composer/schedule-send.spec.ts` and the helpers it reaches remain.
+- All screenshot baselines (`apps/web/playwright/snapshots/`, `packages/shared-components/__vis__/`).
+- The optional runtime modules in `modules/` (none was configured), with their workspace, knip and patch entries.
+- The desktop `CHANGELOG.md` and the `jsqr` and root `@typescript/native` dev dependencies.
