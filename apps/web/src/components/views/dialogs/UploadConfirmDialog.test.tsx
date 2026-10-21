@@ -163,6 +163,14 @@ describe("<UploadConfirmDialog />", () => {
     describe("scheduling", () => {
         const file = new File(["hello"], "notes.txt", { type: "text/plain" });
 
+        it("should mark the schedule button as added by Ahmad", () => {
+            const { getByRole } = render(<UploadConfirmDialog files={[file]} onFinished={vi.fn()} />);
+
+            const button = getByRole("button", { name: "Schedule" });
+            expect(button).toHaveClass("mx_AddedByAhmad_inline");
+            expect(button).toHaveAttribute("title", "New, added by Ahmad");
+        });
+
         it("should pass the chosen time and the caption", async () => {
             vi.spyOn(Modal, "createDialog").mockReturnValue({ finished: Promise.resolve([true, 1234]) } as any);
             const onFinished = vi.fn();

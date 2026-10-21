@@ -47,6 +47,11 @@ describe("<ScheduledMessagesDialog />", () => {
         expect(screen.getByText("Nothing is scheduled.")).toBeInTheDocument();
     });
 
+    it("is marked as added by Ahmad", () => {
+        render(<ScheduledMessagesDialog onFinished={vi.fn()} />);
+        expect(screen.getByText("Nothing is scheduled.").closest(".mx_Dialog_content")).toHaveClass("mx_AddedByAhmad");
+    });
+
     it("lists messages from every room, with a photo message as one entry", () => {
         scheduledMessages.schedule("!team:x", null, text, later);
         scheduledMessages.schedule("!other:x", null, photo("a.png", "holiday"), later + 1000, "batch");

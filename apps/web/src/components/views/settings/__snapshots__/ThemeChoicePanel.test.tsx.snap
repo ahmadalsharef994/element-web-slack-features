@@ -121,7 +121,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should display custom theme 1`] =
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
               for="radix-react-use-id-3"
             >
-              Sand
+              Sand (new, added by Ahmad)
             </label>
           </div>
         </div>
@@ -357,7 +357,7 @@ exports[`<ThemeChoicePanel /> > custom theme > should render the custom theme se
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
               for="radix-react-use-id-3"
             >
-              Sand
+              Sand (new, added by Ahmad)
             </label>
           </div>
         </div>
@@ -593,7 +593,7 @@ exports[`<ThemeChoicePanel /> > renders the theme choice UI 1`] = `
               class="_label mx_ThemeChoicePanel_themeSelector_Label"
               for="radix-react-use-id-3"
             >
-              Sand
+              Sand (new, added by Ahmad)
             </label>
           </div>
         </div>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Element Fork logo: a fork (one stem splitting into two branches). Source for apps/desktop/build icons. -->
+  <circle cx="256" cy="256" r="256" fill="#BC4500"/>
+  <g fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M172 146 V200 C172 258 256 250 256 302"/>
+    <path d="M340 146 V200 C340 258 256 250 256 302"/>
+    <path d="M256 302 V366"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="172" cy="146" r="48"/>
+    <circle cx="340" cy="146" r="48"/>
+    <circle cx="256" cy="366" r="48"/>
+  </g>
+  <g fill="#BC4500">
+    <circle cx="172" cy="146" r="19"/>
+    <circle cx="340" cy="146" r="19"/>
+    <circle cx="256" cy="366" r="19"/>
+  </g>
+</svg>

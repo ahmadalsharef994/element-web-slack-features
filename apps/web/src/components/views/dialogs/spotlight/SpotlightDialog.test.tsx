@@ -191,6 +191,7 @@ describe("Spotlight Dialog", () => {
 
             await waitFor(() => expect(screen.getByText("Jane Doe")).toBeInTheDocument());
             expect(screen.queryByText("No results found")).not.toBeInTheDocument();
+            expect(screen.getByRole("group", { name: "People" })).toHaveClass("mx_AddedByAhmad");
         });
 
         it("should find public rooms without choosing the Public rooms filter", async () => {
@@ -199,6 +200,7 @@ describe("Spotlight Dialog", () => {
             await flushPromisesWithFakeTimers();
 
             await waitFor(() => expect(screen.getByText("Room #247")).toBeInTheDocument());
+            expect(screen.getByRole("group", { name: "Public rooms" })).toHaveClass("mx_AddedByAhmad");
         });
 
         it("should look up 'name@server' as a Matrix ID", async () => {

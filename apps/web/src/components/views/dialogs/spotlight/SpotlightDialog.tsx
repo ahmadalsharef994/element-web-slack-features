@@ -837,7 +837,8 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         if (results[Section.Suggestions].length && (filter === Filter.People || filter === null)) {
             suggestionsSection = (
                 <div
-                    className="mx_SpotlightDialog_section mx_SpotlightDialog_results"
+                    // People found without choosing a filter is a feature added by Ahmad
+                    className={`mx_SpotlightDialog_section mx_SpotlightDialog_results${filter === null ? " mx_AddedByAhmad" : ""}`}
                     role="group"
                     aria-labelledby="mx_SpotlightDialog_section_suggestions"
                 >
@@ -917,7 +918,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
         if (filter === null && results[Section.PublicRoomsAndSpaces].length) {
             unifiedPublicRoomsSection = (
                 <div
-                    className="mx_SpotlightDialog_section mx_SpotlightDialog_results"
+                    className="mx_SpotlightDialog_section mx_SpotlightDialog_results mx_AddedByAhmad"
                     role="group"
                     aria-labelledby="mx_SpotlightDialog_section_unifiedPublicRooms"
                 >

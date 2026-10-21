@@ -213,7 +213,7 @@ describe("theme", () => {
             expect(enumerateThemes()).toEqual({
                 "light": "Light",
                 "light-high-contrast": "Light high contrast",
-                "light-sand": "Sand",
+                "light-sand": "Sand (new, added by Ahmad)",
                 "dark": "Dark",
                 "custom-pink": "pink",
             });
@@ -224,7 +224,7 @@ describe("theme", () => {
             expect(enumerateThemes()).toEqual({
                 "light": "Light",
                 "light-high-contrast": "Light high contrast",
-                "light-sand": "Sand",
+                "light-sand": "Sand (new, added by Ahmad)",
                 "dark": "Dark",
             });
         });
@@ -235,7 +235,7 @@ describe("theme", () => {
             vi.spyOn(SettingsStore, "getValue").mockReturnValue([{ name: "Zebra Striped" }, { name: "Apple Green" }]);
             expect(getOrderedThemes()).toEqual([
                 { id: "light", name: "Light" },
-                { id: "light-sand", name: "Sand" },
+                { id: "light-sand", name: "Sand (new, added by Ahmad)" },
                 { id: "dark", name: "Dark" },
                 { id: "custom-Apple Green", name: "Apple Green" },
                 { id: "custom-Zebra Striped", name: "Zebra Striped" },

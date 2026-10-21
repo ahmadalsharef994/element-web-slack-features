@@ -488,7 +488,7 @@ exports[`RoomView > for a local room > in state NEW > should match the snapshot 
                   </button>
                   <button
                     aria-label="Heading"
-                    class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                    class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                     role="button"
                     tabindex="-1"
                     type="button"
@@ -888,7 +888,7 @@ exports[`RoomView > for a local room > in state NEW > that is encrypted > should
                   </button>
                   <button
                     aria-label="Heading"
-                    class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                    class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                     role="button"
                     tabindex="-1"
                     type="button"
@@ -1534,7 +1534,7 @@ exports[`RoomView > should hide the header when hideHeader=true 1`] = `
                     </button>
                     <button
                       aria-label="Heading"
-                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                       role="button"
                       tabindex="-1"
                       type="button"
@@ -1721,7 +1721,7 @@ exports[`RoomView > should hide the header when hideHeader=true 1`] = `
                   aria-expanded="false"
                   aria-haspopup="menu"
                   aria-label="Schedule send"
-                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend"
+                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
                   data-testid="schedulesendbtn"
                   role="button"
                   tabindex="0"
@@ -2064,7 +2064,7 @@ exports[`RoomView > should hide the pinned message banner when hidePinnedMessage
                     </button>
                     <button
                       aria-label="Heading"
-                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                       role="button"
                       tabindex="-1"
                       type="button"
@@ -2251,7 +2251,7 @@ exports[`RoomView > should hide the pinned message banner when hidePinnedMessage
                   aria-expanded="false"
                   aria-haspopup="menu"
                   aria-label="Schedule send"
-                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend"
+                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
                   data-testid="schedulesendbtn"
                   role="button"
                   tabindex="0"
@@ -2594,7 +2594,7 @@ exports[`RoomView > should hide the right panel when hideRightPanel=true 1`] = `
                     </button>
                     <button
                       aria-label="Heading"
-                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                       role="button"
                       tabindex="-1"
                       type="button"
@@ -2781,7 +2781,7 @@ exports[`RoomView > should hide the right panel when hideRightPanel=true 1`] = `
                   aria-expanded="false"
                   aria-haspopup="menu"
                   aria-label="Schedule send"
-                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend"
+                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
                   data-testid="schedulesendbtn"
                   role="button"
                   tabindex="0"
@@ -3373,7 +3373,7 @@ exports[`RoomView > should not display the timeline when the room encryption is 
                     </button>
                     <button
                       aria-label="Heading"
-                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                      class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                       role="button"
                       tabindex="-1"
                       type="button"
@@ -3560,7 +3560,7 @@ exports[`RoomView > should not display the timeline when the room encryption is 
                   aria-expanded="false"
                   aria-haspopup="menu"
                   aria-label="Schedule send"
-                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend"
+                  class="mx_AccessibleButton mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
                   data-testid="schedulesendbtn"
                   role="button"
                   tabindex="0"
@@ -3985,7 +3985,7 @@ exports[`RoomView > video rooms > should render joined video room view 1`] = `
                         </button>
                         <button
                           aria-label="Heading"
-                          class="mx_AccessibleButton mx_MessageComposerFormatBar_button"
+                          class="mx_AccessibleButton mx_MessageComposerFormatBar_button mx_AddedByAhmad_inline"
                           role="button"
                           tabindex="-1"
                           type="button"
@@ -4172,7 +4172,7 @@ exports[`RoomView > video rooms > should render joined video room view 1`] = `
                       aria-expanded="false"
                       aria-haspopup="menu"
                       aria-label="Schedule send"
-                      class="mx_AccessibleButton mx_MessageComposer_scheduleSend"
+                      class="mx_AccessibleButton mx_MessageComposer_scheduleSend mx_AddedByAhmad_inline"
                       data-testid="schedulesendbtn"
                       role="button"
                       tabindex="0"

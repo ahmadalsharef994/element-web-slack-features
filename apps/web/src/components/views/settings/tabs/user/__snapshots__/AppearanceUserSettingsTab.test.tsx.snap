@@ -98,7 +98,7 @@ exports[`AppearanceUserSettingsTab > should render 1`] = `
                       class="_label mx_ThemeChoicePanel_themeSelector_Label"
                       for="radix-react-use-id-2"
                     >
-                      Sand
+                      Sand (new, added by Ahmad)
                     </label>
                   </div>
                 </div>

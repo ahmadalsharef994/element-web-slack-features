@@ -451,6 +451,7 @@
     "common": {
         "access_token": "Access Token",
         "accessibility": "Accessibility",
+        "added_by_ahmad": "New, added by Ahmad",
         "advanced": "Advanced",
         "all_chats": "All Chats",
         "analytics": "Analytics",
@@ -3309,7 +3310,7 @@
     },
     "theme": {
         "light_high_contrast": "Light high contrast",
-        "light_sand": "Sand",
+        "light_sand": "Sand (new, added by Ahmad)",
         "match_system": "Match system"
     },
     "thread_view_back_action_label": "Back to thread",

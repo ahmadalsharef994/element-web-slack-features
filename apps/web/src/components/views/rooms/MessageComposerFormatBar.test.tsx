@@ -42,4 +42,11 @@ describe("MessageComposerFormatBar", () => {
         expect(toolbar.style.left).toBe("");
         expect(toolbar.style.top).toBe("");
     });
+
+    it("marks only the heading button as added by Ahmad", () => {
+        renderBar(true);
+
+        expect(screen.getByRole("button", { name: "Heading" })).toHaveClass("mx_AddedByAhmad_inline");
+        expect(screen.getByRole("button", { name: "Bold" })).not.toHaveClass("mx_AddedByAhmad_inline");
+    });
 });

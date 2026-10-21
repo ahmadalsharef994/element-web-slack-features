@@ -32,6 +32,12 @@ describe("<SchedulePickerDialog />", () => {
         expect(onFinished).toHaveBeenCalledWith(true, new Date(when).getTime(), undefined);
     });
 
+    it("is marked as added by Ahmad", () => {
+        render(<SchedulePickerDialog onFinished={vi.fn()} />);
+
+        expect(screen.getByLabelText("Send at").closest(".mx_Dialog_content")).toHaveClass("mx_AddedByAhmad");
+    });
+
     it("does not allow a time in the past", () => {
         render(<SchedulePickerDialog onFinished={vi.fn()} />);
 
