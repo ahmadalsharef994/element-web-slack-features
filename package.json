@@ -33,13 +33,10 @@
         "@typescript/native": "catalog:",
         "@vitest/coverage-v8": "catalog:",
         "@vitest/ui": "catalog:",
-        "cronstrue": "^3.0.0",
         "eslint-plugin-element-call": "github:element-hq/element-call#main&path:/eslint",
         "eslint-plugin-storybook": "^10.4.6",
         "knip": "6.38.0",
-        "lodash": "^4.17.21",
         "mermaid": "^12.0.0",
-        "minimist": "^1.2.6",
         "nx": "catalog:",
         "oxfmt": "0.70.0",
         "oxlint": "1.85.0",
@@ -47,8 +44,7 @@
         "typescript": "catalog:ts6",
         "vitepress": "^1.6.4",
         "vitepress-plugin-mermaid": "^2.0.17",
-        "vitest": "catalog:",
-        "yaml": "^2.3.3"
+        "vitest": "catalog:"
     },
     "engines": {
         "node": ">=22.18"
