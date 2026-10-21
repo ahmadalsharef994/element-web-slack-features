@@ -23,16 +23,16 @@ There is **no** top-level `playwright/` directory; `docs/playwright.md` uses pat
 
 Run from the repo root unless stated otherwise.
 
-| Task                                                   | Command                                           |
-| ------------------------------------------------------ | ------------------------------------------------- |
+| Task                                        | Command                                           |
+| ------------------------------------------- | ------------------------------------------------- |
 | Full lint (types, format, js, styles, knip) | `pnpm lint`                                       |
-| Format                                                 | `pnpm lint:fmt:fix`                               |
-| Lint JS/TS                                             | `pnpm lint:js:fix`                                |
-| Typecheck                                              | `pnpm -r --workspace-concurrency=1 lint:types`    |
-| All unit tests                                         | `pnpm test:unit`                                  |
-| Regenerate i18n strings                                | `pnpm i18n`                                       |
-| Start the app                                          | `cd apps/web && pnpm start`                       |
-| Storybook                                              | `cd packages/shared-components && pnpm storybook` |
+| Format                                      | `pnpm lint:fmt:fix`                               |
+| Lint JS/TS                                  | `pnpm lint:js:fix`                                |
+| Typecheck                                   | `pnpm -r --workspace-concurrency=1 lint:types`    |
+| All unit tests                              | `pnpm test:unit`                                  |
+| Regenerate i18n strings                     | `pnpm i18n`                                       |
+| Start the app                               | `cd apps/web && pnpm start`                       |
+| Storybook                                   | `cd packages/shared-components && pnpm storybook` |
 
 Formatting is **oxfmt** and linting is **oxlint**. This repo does not use prettier or eslint — running prettier here
 reformats files against the project style and reports failures that do not exist.

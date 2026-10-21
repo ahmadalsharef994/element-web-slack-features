@@ -15,6 +15,7 @@
 **Current state**: Own presence is sent by `apps/web/src/Presence.ts` (Online on `Action.UserActivity`, Unavailable after 3 min) via `setSyncPresence()` → `set_presence` on every `/sync`. Started in `apps/web/src/Lifecycle.ts:1075` unless `lowBandwidth` is on. No `SettingsStore` key hides presence in either direction; the only display gate is config `enable_presence_by_hs_url`, read in three behaviourally identical places.
 
 **Files**:
+
 - `apps/web/src/Presence.ts`, `apps/web/src/Lifecycle.ts`, `apps/web/src/MatrixClientPeg.ts`
 - `apps/web/src/settings/Settings.tsx` (template: `sendTypingNotifications` :926)
 - `apps/web/src/components/views/settings/tabs/user/PreferencesUserSettingsTab.tsx` (`PRESENCE_SETTINGS` :124)
@@ -23,9 +24,10 @@
 - Tests: `apps/web/src/components/views/avatars/WithPresenceIndicator.test.tsx`, `apps/web/src/stores/MemberListStore.test.ts`, `apps/web/src/components/viewmodels/right_panel/user_info/UserInfoHeaderViewModel.test.ts`
 
 **Steps**:
-1. *Hide own*: add `sharePresence` (boolean, `LEVELS_ACCOUNT_SETTINGS`, default true) in `Settings.tsx`. In `Presence.ts` `setState()`, when false send `SetPresence.Offline` via `setSyncPresence` instead of Online/Unavailable; `watchSetting("sharePresence")` in `start()` to force a send on toggle (the `newState === this.state` early return otherwise swallows it); unwatch in `stop()`.
+
+1. _Hide own_: add `sharePresence` (boolean, `LEVELS_ACCOUNT_SETTINGS`, default true) in `Settings.tsx`. In `Presence.ts` `setState()`, when false send `SetPresence.Offline` via `setSyncPresence` instead of Online/Unavailable; `watchSetting("sharePresence")` in `start()` to force a send on toggle (the `newState === this.state` early return otherwise swallows it); unwatch in `stop()`.
 2. Add key to `PRESENCE_SETTINGS`; add string; `pnpm i18n`.
-3. *Hide others*: add `showPresence` (boolean, default true). Make `utils/presence.ts isPresenceEnabled()` return false when off, then replace the duplicate checks in `MemberListStore.isPresenceEnabled()` and `UserInfoHeaderViewModel` with that helper — covers member list, user-info "Online for X", DM avatars (new + legacy).
+3. _Hide others_: add `showPresence` (boolean, default true). Make `utils/presence.ts isPresenceEnabled()` return false when off, then replace the duplicate checks in `MemberListStore.isPresenceEnabled()` and `UserInfoHeaderViewModel` with that helper — covers member list, user-info "Online for X", DM avatars (new + legacy).
 4. Reactivity: use `useSettingValue("showPresence")` in `MemberListViewModel.ts` (:186 useMemo) and `usePresence` in `WithPresenceIndicator.tsx`.
 5. Tests: extend the three test files; add a `Presence.test.ts` asserting `setSyncPresence("offline")`.
 6. Optional hard switch: `opts.disablePresence = !sharePresence` in `MatrixClientPeg.ts` (~:288) with `ReloadOnChangeController`.
@@ -41,6 +43,7 @@
 **Current state**: No UI, setting, slash command, or string. The js-sdk (42.3.0) fully exposes MSC4140 delayed events (`_unstable_sendDelayedEvent`, `_unstable_getDelayedEvents`, `_unstable_cancel/restart/sendScheduledDelayedEvent`, `UNSTABLE_MSC4140_DELAYED_EVENTS`, `doesServerSupportUnstableFeature`). Only consumer is the widget bridge `apps/web/src/stores/widgets/ElementWidgetDriver.ts` (:394-505). Two composer send paths both end in `doMaybeLocalRoomAction(... mxClient.sendMessage ...)`.
 
 **Files**:
+
 - `apps/web/src/components/views/rooms/SendMessageComposer.tsx` (send at :487-489; `shouldSend = false` branch :415)
 - `apps/web/src/components/views/rooms/wysiwyg_composer/utils/message.ts` (:137-139)
 - `apps/web/src/components/views/rooms/MessageComposer.tsx` (`SendButton` :78-88, `sendMessage` :403)
@@ -54,6 +57,7 @@
 - SDK reference: `apps/web/node_modules/matrix-js-sdk/lib/client.d.ts`, `lib/@types/requests.d.ts`, `lib/client.js`
 
 **Steps**:
+
 1. Labs flag `feature_scheduled_messages` (`LabGroup.Messaging`). Do not gate on server support; choose backend at send time.
 2. Add `sendAt?: number` to `SendMessageComposer.sendMessage()` params and WYSIWYG `SendMessageParams`; when set, call new `apps/web/src/utils/scheduledMessages.ts scheduleMessage(client, roomId, threadId, content, sendAt)` instead of `sendMessage`. Keep clear-composer/history/`message_sent` behaviour.
 3. Server path: if `doesServerSupportUnstableFeature(UNSTABLE_MSC4140_DELAYED_EVENTS)` **and** `!room.hasEncryptionStateEvent()` → `_unstable_sendDelayedEvent(roomId, { delay }, threadId, EventType.RoomMessage, content)` (shape from `ElementWidgetDriver.ts:436-443`). List/cancel/send-now via `_unstable_getDelayedEvents("scheduled")` filtered by `room_id`.
@@ -73,6 +77,7 @@
 **Current state**: Rendering already works: `packages/shared-utils/src/html/sanitizeHtmlParams.ts` `MATRIX_FORMATTING_TAGS` (:50-56) allows table/thead/tbody/tr/th/td/caption; github-markdown-css (imported per theme, e.g. `apps/web/res/themes/light/css/light.pcss:9`) styles them. Composing fails: `apps/web/src/Markdown.ts` wraps commonmark 0.31.2 (no GFM, no plugin API), so a pipe table is a paragraph, `isPlainText()` (:238-276) returns true, and no `formatted_body` is sent. No th/td attributes survive (`MATRIX_ALLOWED_ATTRIBUTES` :64-71). Editing/quoting flattens tables (`editor/deserialize.ts` has no TABLE case). Zero tests cover tables.
 
 **Files**:
+
 - `apps/web/src/Markdown.ts` (constructor :122-124, `repairLinks` :139-235, `isPlainText` :238-276, `toHTML` :289-370, `ALLOWED_HTML_TAGS` :16, `isAllowedHtmlTag` :21-38)
 - `apps/web/src/editor/serialize.ts` (:66-160, gate at :134), `apps/web/src/editor/deserialize.ts` (`parseNode` :181-300)
 - `packages/shared-utils/src/html/sanitizeHtmlParams.ts`, `packages/shared-utils/src/html/sanitizeHtml.ts`, `apps/web/src/Linkify.ts`, `apps/web/src/HtmlUtils.tsx` (`checkBlockNode` :535-566)
@@ -81,6 +86,7 @@
 - Tests: `apps/web/src/Markdown.test.ts`, `apps/web/src/HtmlUtils.test.tsx`, `packages/shared-utils/src/html/sanitizeHtml.test.ts`
 
 **Steps**:
+
 1. In `Markdown.ts` add a `repairTables()` AST pass after `repairLinks`: for a top-level `paragraph` whose text/softbreak children form header + `|---|:--:|` delimiter + body rows, build an `html_block` node with `<table><thead>…</thead><tbody>…</tbody></table>` (render cell inline markdown via a second `commonmark.Parser`), `insertBefore`/`unlink`. Mark the node (e.g. private flag).
 2. `isPlainText()`: return false for the marked node. Optionally extend `isAllowedHtmlTag` to table tags (regex `^<\/?(.*)>$` only matches single tags, so multi-line literals need a separate check).
 3. `toHTML()`: the `html_block` renderer (:346) escapes unknown tags — pass the marked node's literal through raw; the sanitizer re-validates anyway.
@@ -101,6 +107,7 @@
 **Current state**: CIDER composer → `SendMessageComposer.createMessageContent` (:77-115) → `editor/serialize.ts htmlSerializeIfNeeded` (:54-164) → `Markdown.ts`. Only `sub/sup/del/s/u/br` raw HTML survives. Headings, lists, code, quotes, `data-mx-maths` (labs `feature_latex_maths`), spoilers all work. Missing: `~~strike~~` (toolbar emits raw `<del>`), tables, task lists, footnotes, live preview, always-visible toolbar. Render-time: `HtmlUtils.tsx` (:288-477) → sanitizer → `CodeBlock.tsx` / `renderer/spoiler.tsx`. WYSIWYG lab uses the Rust `plainToRich`, not `Markdown.ts`.
 
 **Files**:
+
 - `apps/web/src/Markdown.ts`, `apps/web/src/@types/commonmark.ts`, `apps/web/src/editor/serialize.ts`, `apps/web/src/editor/deserialize.ts` (DEL/S :207-210), `apps/web/src/editor/operations.ts` (`formatRange` :23-58, Strikethrough :46)
 - `apps/web/src/components/views/rooms/MessageComposerFormatBar.tsx` (Formatting enum :24-31), `apps/web/src/components/views/rooms/BasicMessageComposer.tsx` (format bar gate :488-490, keyboard :583-599, `onFormatAction` :796, `render` :809)
 - `apps/web/src/accessibility/KeyboardShortcuts.ts` (:35-43, :346-380), `apps/web/src/KeyBindingsDefaults.ts`
@@ -111,6 +118,7 @@
 - Tests: `apps/web/src/Markdown.test.ts`, `apps/web/src/editor/serialize.test.ts`, `apps/web/src/editor/deserialize.test.ts`, `apps/web/src/editor/roundtrip.test.ts`, `apps/web/src/HtmlUtils.test.tsx`, `apps/web/src/utils/renderMarkdown.test.ts`, `apps/web/playwright/e2e/composer/CIDER.spec.ts`
 
 **Steps**:
+
 1. **Strikethrough `~~`**: AST pass in `Markdown.ts` splitting `text` nodes on `~~…~~` into `html_inline` `<del>`/`</del>` (already allowed, so `isPlainText`/`toHTML` untouched). Switch `operations.ts:46` and `deserialize.ts` DEL/S to emit `~~`; keep accepting `<del>` input. Add `FormatStrikethrough` keybinding. Tests in Markdown/serialize/roundtrip.
 2. **Tables**: see section 4.
 3. **Task lists**: commonmark already yields `<li>[ ] task</li>`. `<input>` is not spec-permitted, so render client-side: new `apps/web/src/renderer/task-list.tsx` (copy `spoiler.tsx`) matching `li` starting with `[ ]`/`[x]`, registered in `EventContentBodyViewModel.ts:158-159` and `TextualBodyFactory.tsx:103-109`. Interoperable HTML stays as-is.
@@ -130,6 +138,7 @@
 **Current state**: Already present: threads (`apps/web/src/components/structures/ThreadPanel.tsx`, `ThreadView.tsx`, `apps/web/src/components/views/spaces/threads-activity-centre/ThreadsActivityCentre.tsx`), reactions (hard-coded `QUICK_REACTIONS` in `packages/shared-components/src/core/EmojiPicker/QuickReactions.tsx:22`), editing (`EditMessageComposer.tsx`), pins (`apps/web/src/utils/PinningUtils.ts`, `PinnedMessagesCard.tsx`), mark-unread (`apps/web/src/utils/notifications.ts` :146/:162, MSC2867), keyword push rules (`apps/web/src/components/views/settings/Notifications.tsx` :582/:636, `apps/web/src/notifications/ContentRules.ts`), URL previews (incl. composer preview `apps/web/src/viewmodels/composer/MessageComposerUrlPreviewViewModel.ts`), uploads (`apps/web/src/ContentMessages.ts`), search (`apps/web/src/Searching.ts` :682), custom status (MSC4426, `apps/web/src/utils/userStatus.ts`, `feature_user_status` default true, needs MSC4429 server), slash commands (`apps/web/src/slash-commands/SlashCommands.tsx` :70/:864/:905). **Gaps**: DND/snooze, saved messages, remind-me, draft sync (drafts are localStorage `mx_cider_state_*`, thread drafts never restored `SendMessageComposer.tsx:541-544`), custom keybindings, always-visible format bar, status presets/expiry, message search in Spotlight. Note: `feature_hidebold` is **not** a labs flag — it is `IBaseSetting<boolean>` (`Settings.tsx:242`), the inverted twin of `Notifications.showbold`.
 
 **Files**:
+
 - Registry/UI: `apps/web/src/settings/Settings.tsx`, `apps/web/src/settings/SettingLevel.ts`, `apps/web/src/settings/handlers/ConfigSettingsHandler.ts`, `apps/web/src/components/views/settings/tabs/user/LabsUserSettingsTab.tsx`, `docs/labs.md`, `docs/feature-flags.md`, `docs/config.md` (`setting_defaults` :110-114, modules :597)
 - Right panel: `apps/web/src/stores/right-panel/RightPanelStorePhases.ts`, `apps/web/src/components/structures/RightPanel.tsx` (:155-282), `apps/web/src/components/views/right_panel/RoomSummaryCardView.tsx`
 - Message actions: `packages/shared-components/src/room/timeline/event-tile/actions/ActionBarView/ActionBarView.tsx` (`ActionBarAction` :92-108), `apps/web/src/viewmodels/room/EventTileActionBarViewModel.ts` (:144, :187), `apps/web/src/components/views/context_menus/MessageContextMenu.tsx`
@@ -142,6 +151,7 @@
 - Module API: `packages/module-api/src/api/index.ts`, `custom-components.ts`, `composer.ts`, `urlpreview.ts`, `settings.ts` (read-only), `packages/module-api/README.md`, `modules/banner`, `apps/web/build_config.sample.yaml` (copy to `build_config.yaml`, not in repo)
 
 **Steps (prioritised)**:
+
 - **P1 DND/snooze**: `notificationsSnoozedUntil` (number, device-level) in `Settings.tsx`; guard popup/audio in `Notifier.ts` around :436/:520 with `Date.now() < snoozedUntil`; snooze menu (30m/1h/tomorrow/off) via `UserMenuViewModel.ts` + a shared-components view next to `packages/shared-components/src/status/`; optional cross-device: toggle `.m.rule.master` push rule (`StandardActions.ts`).
 - **P1 Saved messages**: account data `io.element.saved_messages` `{events:[{room_id,event_id}]}`; add `ActionBarAction.Save` + `resolveActions` + `MessageContextMenu` entry; new `RightPanelPhases.SavedMessages` + `SavedMessagesCard` modelled on `PinnedMessagesCard.tsx`/`apps/web/src/hooks/usePinnedEvents.ts` (`client.fetchRoomEvent`); menu item in `RoomSummaryCardView.tsx`. Behind `feature_saved_messages`.
 - **P1 Draft sync**: mirror `saveStoredEditorState` (:572) / WYSIWYG (:200) into room account data (`io.element.draft`, debounced); read in `restoreStoredEditorState` (:540) when local empty; drop the thread `return null` (:541-544); extend `DraftCleaner.ts`.

@@ -122,8 +122,7 @@ export default {
         "@typescript/old",
     ],
     ignoreExportsUsedInFile: true,
-    ignoreBinaries: [
-    ],
+    ignoreBinaries: [],
     compilers: {
         pcss: (text: string) =>
             [...text.matchAll(/@import\s+(?:url\()?["']([^"']+)["']\)?[^;]*;/g)]
