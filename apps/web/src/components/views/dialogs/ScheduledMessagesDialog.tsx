@@ -7,8 +7,11 @@ Please see LICENSE files in the repository root for full details.
 
 import React, { useEffect, useState, type JSX } from "react";
 
+import { logger } from "matrix-js-sdk/src/logger";
+
 import { _t } from "../../../languageHandler";
 import BaseDialog from "./BaseDialog";
+import ErrorDialog from "./ErrorDialog";
 import SchedulePickerDialog from "./SchedulePickerDialog";
 import AccessibleButton from "../elements/AccessibleButton";
 import Modal from "../../../Modal";
@@ -24,6 +27,19 @@ import {
 
 interface IProps {
     onFinished: () => void;
+}
+
+/** Runs a change to the schedule, telling the person if the server that holds the message could not be reached. */
+async function change(action: () => Promise<void>): Promise<void> {
+    try {
+        await action();
+    } catch (e) {
+        logger.warn("Could not change a scheduled message", e);
+        Modal.createDialog(ErrorDialog, {
+            title: _t("common|error"),
+            description: _t("schedule_send|server_unreachable"),
+        });
+    }
 }
 
 /** Lists everything scheduled, in every room, with a way to edit, cancel or send each one now. */
@@ -47,7 +63,7 @@ export default function ScheduledMessagesDialog({ onFinished }: IProps): JSX.Ele
             textOptional: hasFiles,
         });
         const [confirmed, sendAt, text] = await finished;
-        if (confirmed) scheduledMessages.update(group.id, { sendAt, text });
+        if (confirmed) await change(() => scheduledMessages.update(group.id, { sendAt, text }));
     };
 
     return (
@@ -71,6 +87,11 @@ export default function ScheduledMessagesDialog({ onFinished }: IProps): JSX.Ele
                                     <div className="mx_ScheduledMessagesDialog_time">
                                         {roomName} · {formatFullDate(new Date(group.sendAt))}
                                     </div>
+                                    <div className="mx_ScheduledMessagesDialog_sender">
+                                        {group.messages.every((message) => message.delayId)
+                                            ? _t("schedule_send|sent_by_server")
+                                            : _t("schedule_send|sent_by_this_device")}
+                                    </div>
                                     {text && <div className="mx_ScheduledMessagesDialog_body">{text}</div>}
                                     {fileNames.length > 0 && (
                                         <div className="mx_ScheduledMessagesDialog_files">{fileNames.join(", ")}</div>
@@ -82,13 +103,13 @@ export default function ScheduledMessagesDialog({ onFinished }: IProps): JSX.Ele
                                     </AccessibleButton>
                                     <AccessibleButton
                                         kind="primary_outline"
-                                        onClick={() => scheduledMessages.sendNow(group.id)}
+                                        onClick={() => void change(() => scheduledMessages.sendNow(group.id))}
                                     >
                                         {_t("schedule_send|send_now")}
                                     </AccessibleButton>
                                     <AccessibleButton
                                         kind="danger_outline"
-                                        onClick={() => scheduledMessages.cancel(group.id)}
+                                        onClick={() => void change(() => scheduledMessages.cancel(group.id))}
                                     >
                                         {_t("action|cancel")}
                                     </AccessibleButton>

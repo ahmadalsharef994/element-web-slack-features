@@ -1341,7 +1341,6 @@ exports[`PreferencesUserSettingsTab > should render 1`] = `
                       class="_container"
                     >
                       <input
-                        checked=""
                         class="_input"
                         disabled=""
                         id="mx_SettingsFlag_qWg7OgID1yRR"

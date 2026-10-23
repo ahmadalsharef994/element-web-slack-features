@@ -2439,6 +2439,9 @@
         "picker_past": "Choose a time in the future.",
         "picker_title": "Schedule message",
         "send_now": "Send now",
+        "sent_by_server": "Your homeserver sends this, even if Element is closed.",
+        "sent_by_this_device": "Sent from this device, only while Element is open.",
+        "server_unreachable": "Your homeserver holds this message and could not be reached. Try again.",
         "text_label": "Message",
         "tomorrow_morning": "Tomorrow at 9:00"
     },

@@ -7,7 +7,7 @@ Please see LICENSE files in the repository root for full details.
 
 // @vitest-environment happy-dom
 
-import { type MatrixClient } from "matrix-js-sdk/src/matrix";
+import { MatrixError, type MatrixClient } from "matrix-js-sdk/src/matrix";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getScheduledFileName, getScheduledText, ScheduledMessages } from "./scheduledMessages";
@@ -217,6 +217,243 @@ describe("ScheduledMessages", () => {
 
             queue.update(id, { text: "plain" });
             expect(queue.getGroups()[0].messages[0].content).not.toHaveProperty("formatted_body");
+        });
+    });
+
+    describe("when the server can hold messages", () => {
+        const notFound = (): MatrixError => new MatrixError({ errcode: "M_NOT_FOUND" }, 404);
+        let delayCount: number;
+
+        beforeEach(() => {
+            queue.stop();
+            delayCount = 0;
+            Object.assign(client, {
+                doesServerSupportUnstableFeature: vi.fn().mockResolvedValue(true),
+                getRoom: vi.fn().mockReturnValue({}),
+                isRoomEncrypted: vi.fn().mockReturnValue(false),
+                _unstable_sendDelayedEvent: vi.fn().mockImplementation(async () => ({ delay_id: `d${++delayCount}` })),
+                _unstable_cancelScheduledDelayedEvent: vi.fn().mockResolvedValue({}),
+                _unstable_sendScheduledDelayedEvent: vi.fn().mockResolvedValue({}),
+                _unstable_getDelayedEvents: vi.fn().mockResolvedValue({ scheduled: [] }),
+            });
+            queue.start(client);
+        });
+
+        const flush = (): Promise<void> => vi.advanceTimersByTimeAsync(0);
+
+        it("hands the message to the server and does not send it from here", async () => {
+            const message = queue.schedule("!r:x", "$thread", content, now + 60_000);
+            await flush();
+
+            expect(client._unstable_sendDelayedEvent).toHaveBeenCalledWith(
+                "!r:x",
+                { delay: 60_000 },
+                "$thread",
+                "m.room.message",
+                content,
+            );
+            expect(message.delayId).toBe("d1");
+
+            await vi.advanceTimersByTimeAsync(61_000);
+            expect(client.sendMessage).not.toHaveBeenCalled();
+        });
+
+        it("keeps the events of one message in order", async () => {
+            queue.schedule("!r:x", null, content, now + 60_000, "batch");
+            queue.schedule("!r:x", null, content, now + 60_000, "batch");
+            await flush();
+
+            const delays = vi.mocked(client._unstable_sendDelayedEvent).mock.calls.map((c) => c[1]);
+            expect(delays).toEqual([{ delay: 60_000 }, { delay: 60_500 }]);
+        });
+
+        it.each([
+            ["the room is encrypted", () => vi.mocked(client.isRoomEncrypted).mockReturnValue(true)],
+            ["the room is not known", () => vi.mocked(client.getRoom).mockReturnValue(null)],
+            [
+                "the server does not support it",
+                () => vi.mocked(client.doesServerSupportUnstableFeature).mockResolvedValue(false),
+            ],
+            [
+                "the server refuses",
+                () => vi.mocked(client._unstable_sendDelayedEvent).mockRejectedValue(new Error("too long")),
+            ],
+        ])("sends it from here when %s", async (_, setUp) => {
+            setUp();
+            queue.schedule("!r:x", null, content, now + 60_000);
+            await vi.advanceTimersByTimeAsync(61_000);
+
+            expect(client.sendMessage).toHaveBeenCalledWith("!r:x", null, content);
+        });
+
+        it("does not bother the server with a message due in seconds", async () => {
+            queue.schedule("!r:x", null, content, now + 5_000);
+            await flush();
+            expect(client._unstable_sendDelayedEvent).not.toHaveBeenCalled();
+        });
+
+        it("cancels on the server", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+
+            await queue.cancel(id);
+
+            expect(client._unstable_cancelScheduledDelayedEvent).toHaveBeenCalledWith("d1");
+            expect(queue.getAll()).toEqual([]);
+        });
+
+        it("treats a message the server already sent as cancelled", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            vi.mocked(client._unstable_cancelScheduledDelayedEvent).mockRejectedValue(notFound());
+
+            await queue.cancel(id);
+            expect(queue.getAll()).toEqual([]);
+        });
+
+        it("keeps the message listed when the server cannot be reached to cancel it", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            vi.mocked(client._unstable_cancelScheduledDelayedEvent).mockRejectedValue(new Error("offline"));
+
+            await expect(queue.cancel(id)).rejects.toThrow("offline");
+            expect(queue.getAll()).toHaveLength(1);
+            expect(queue.getAll()[0].delayId).toBe("d1");
+        });
+
+        it("asks the server to send it now", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+
+            await queue.sendNow(id);
+
+            expect(client._unstable_sendScheduledDelayedEvent).toHaveBeenCalledWith("d1");
+            expect(client.sendMessage).not.toHaveBeenCalled();
+            expect(queue.getAll()).toEqual([]);
+        });
+
+        it("replaces the server's copy when the time changes", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+
+            await queue.update(id, { sendAt: now + 120_000 });
+            await flush();
+
+            expect(client._unstable_cancelScheduledDelayedEvent).toHaveBeenCalledWith("d1");
+            expect(client._unstable_sendDelayedEvent).toHaveBeenLastCalledWith(
+                "!r:x",
+                { delay: 120_000 },
+                null,
+                "m.room.message",
+                content,
+            );
+            expect(queue.getAll()[0].delayId).toBe("d2");
+        });
+
+        it("changes nothing when the server cannot be reached to take the message back", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            vi.mocked(client._unstable_cancelScheduledDelayedEvent).mockRejectedValue(new Error("offline"));
+
+            await expect(queue.update(id, { sendAt: now + 120_000 })).rejects.toThrow("offline");
+            expect(queue.getAll()[0]).toMatchObject({ sendAt: now + 60_000, delayId: "d1" });
+        });
+
+        it("cancels the server's copy of a message cancelled while it was being handed over", async () => {
+            const { id } = queue.schedule("!r:x", null, content, now + 60_000);
+            await queue.cancel(id);
+            await flush();
+
+            expect(client._unstable_cancelScheduledDelayedEvent).toHaveBeenCalledWith("d1");
+            expect(queue.getAll()).toEqual([]);
+        });
+
+        it("forgets a message once the server has sent it", async () => {
+            queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            expect(queue.getAll()).toHaveLength(1);
+
+            await vi.advanceTimersByTimeAsync(60_000 + 16_000);
+
+            expect(queue.getAll()).toEqual([]);
+            expect(client.sendMessage).not.toHaveBeenCalled();
+        });
+
+        it("keeps a message the server still holds", async () => {
+            queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            vi.mocked(client._unstable_getDelayedEvents).mockResolvedValue({
+                scheduled: [
+                    {
+                        delay_id: "d1",
+                        room_id: "!r:x",
+                        type: "m.room.message",
+                        content,
+                        delay: 60_000,
+                        running_since: now,
+                    },
+                ],
+            } as never);
+
+            await vi.advanceTimersByTimeAsync(60_000 + 16_000);
+            expect(queue.getAll()).toHaveLength(1);
+        });
+
+        it("lists messages scheduled from another device", async () => {
+            vi.mocked(client._unstable_getDelayedEvents).mockResolvedValue({
+                scheduled: [
+                    {
+                        delay_id: "other",
+                        room_id: "!r:y",
+                        type: "m.room.message",
+                        content: { ...content, "m.relates_to": { rel_type: "m.thread", event_id: "$t" } },
+                        delay: 60_000,
+                        running_since: now,
+                    },
+                    // Not a message, so not ours to list
+                    {
+                        delay_id: "call",
+                        room_id: "!r:y",
+                        type: "m.call.member",
+                        state_key: "k",
+                        content: {},
+                        delay: 1,
+                        running_since: now,
+                    },
+                ],
+            } as never);
+
+            queue.stop();
+            queue.start(client);
+            await flush();
+
+            expect(queue.getAll()).toMatchObject([
+                { roomId: "!r:y", threadId: "$t", sendAt: now + 60_000, delayId: "other" },
+            ]);
+        });
+
+        it("keeps what it has when the server cannot be asked", async () => {
+            queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            vi.mocked(client._unstable_getDelayedEvents).mockRejectedValue(new Error("offline"));
+
+            await vi.advanceTimersByTimeAsync(60_000 + 16_000);
+            expect(queue.getAll()).toHaveLength(1);
+        });
+
+        it("hands over messages kept in the browser once the server can hold them", async () => {
+            vi.mocked(client.doesServerSupportUnstableFeature).mockResolvedValue(false);
+            queue.schedule("!r:x", null, content, now + 60_000);
+            await flush();
+            expect(client._unstable_sendDelayedEvent).not.toHaveBeenCalled();
+            queue.stop();
+
+            vi.mocked(client.doesServerSupportUnstableFeature).mockResolvedValue(true);
+            queue.start(client);
+            await flush();
+
+            expect(client._unstable_sendDelayedEvent).toHaveBeenCalledTimes(1);
+            expect(queue.getAll()[0].delayId).toBe("d1");
         });
     });
 });

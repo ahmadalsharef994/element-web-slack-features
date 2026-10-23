@@ -50,6 +50,16 @@ These change how messages are written or shown, so a marker on them would end up
 | Desktop build: named "Element Fork", own app ID, labs settings shown, no Element analytics or bug reports | —                                                                          | `apps/desktop/element.io/release/build.json`, `config.json`                                                                                                               |
 | Desktop logo: message bubble, Liberbyte colours                                                           | `apps/desktop/build/logo-source.svg` (the source the icons are drawn from) | `apps/desktop/build/icon.png`, `icon.ico`, `icon.icon/Assets/element.png`                                                                                                 |
 
+Other changes to behaviour:
+
+- **Read receipts are hidden by default.** `showReadReceipts` in `Settings.tsx` defaults to off (and `RoomView.tsx`
+  starts with it off). Turn it on under Settings → Preferences → "Show read receipts sent by other users". People who
+  already chose a value keep it. Sending your own receipts (`sendReadReceipts`) is unchanged.
+- **Scheduled messages are sent by the homeserver when it can.** With delayed events (MSC4140) on the server and an
+  unencrypted room, `utils/scheduledMessages.ts` hands the message to the server, which sends it even if Element is
+  closed or offline. Encrypted rooms and servers without MSC4140 keep the browser-only queue, which sends only while
+  Element is open. The schedule dialog says which applies to each message.
+
 ### Repository changes that are not features
 
 Upstream CI workflows, issue templates, release tooling, git hooks, unused docs and scripts were removed. The fork

@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ScheduledMessagesDialog from "./ScheduledMessagesDialog";
 import SchedulePickerDialog from "./SchedulePickerDialog";
+import ErrorDialog from "./ErrorDialog";
 import Modal from "../../../Modal";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { scheduledMessages } from "../../../utils/scheduledMessages";
@@ -121,5 +122,32 @@ describe("<ScheduledMessagesDialog />", () => {
         );
         // Closing the editor without saving changes nothing
         expect(scheduledMessages.getGroups()[0].sendAt).toBe(later);
+    });
+
+    it("says who will send each message", () => {
+        scheduledMessages.schedule("!team:x", null, text, later);
+        scheduledMessages.getAll()[0].delayId = "d1";
+        scheduledMessages.schedule("!other:x", null, text, later + 1000);
+        render(<ScheduledMessagesDialog onFinished={vi.fn()} />);
+
+        expect(screen.getByText("Your homeserver sends this, even if Element is closed.")).toBeInTheDocument();
+        expect(screen.getByText("Sent from this device, only while Element is open.")).toBeInTheDocument();
+    });
+
+    it("tells the person when the server holding a message cannot be reached", async () => {
+        scheduledMessages.schedule("!team:x", null, text, later);
+        scheduledMessages.getAll()[0].delayId = "d1";
+        Object.assign(client, {
+            _unstable_cancelScheduledDelayedEvent: vi.fn().mockRejectedValue(new Error("offline")),
+        });
+        const createDialog = vi
+            .spyOn(Modal, "createDialog")
+            .mockReturnValue({ finished: Promise.resolve([]) } as never);
+        render(<ScheduledMessagesDialog onFinished={vi.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+        await vi.waitFor(() => expect(createDialog).toHaveBeenCalledWith(ErrorDialog, expect.anything()));
+        expect(scheduledMessages.getGroups()).toHaveLength(1);
     });
 });

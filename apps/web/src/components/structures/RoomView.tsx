@@ -495,7 +495,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             readMarkerInViewThresholdMs: SettingsStore.getValue("readMarkerInViewThresholdMs"),
             readMarkerOutOfViewThresholdMs: SettingsStore.getValue("readMarkerOutOfViewThresholdMs"),
             showHiddenEvents: SettingsStore.getValue("showHiddenEventsInTimeline"),
-            showReadReceipts: true,
+            showReadReceipts: false,
             showRedactions: true,
             showJoinLeaves: true,
             showAvatarChanges: true,
