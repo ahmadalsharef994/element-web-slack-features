@@ -10,6 +10,11 @@
 
 set -euo pipefail
 
+if [[ $EUID -eq 0 ]]; then
+    echo "Run this without sudo: root has no pnpm. The script asks for your password when it installs." >&2
+    exit 1
+fi
+
 root="$(cd "$(dirname "$0")/.." && pwd)"
 # The NX TUI waits for a key press when it finishes, so print plain output instead
 export NX_TUI=false
