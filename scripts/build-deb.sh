@@ -25,7 +25,7 @@ cp ../desktop/element.io/release/config.json webapp/config.json
 
 cd "$root/apps/desktop"
 rm -f webapp.asar
-pnpm asar-webapp
+pnpm exec asar p ../web/webapp webapp.asar
 pnpm exec nx build --skip-nx-cache
 
 version="$(node -p 'require("./package.json").version')"

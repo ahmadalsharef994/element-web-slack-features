@@ -96,10 +96,9 @@ export default (env: string, argv: Record<string, any>): webpack.Configuration =
         // Embedded source maps for dev builds, can't use eval-source-map due to CSP
         development["devtool"] = "inline-source-map";
     } else {
-        // High quality source maps in separate .map files which include the source. This doesn't bulk up the .js
-        // payload file size, which is nice for performance but also necessary to get the bundle to a small enough
-        // size that sentry will accept the upload.
-        development["devtool"] = "source-map";
+        // Added by Ahmad: no source maps in production builds. They were 79 MB of the 170 MB web app and are only
+        // useful for debugging or uploading to Sentry, which this fork does not do.
+        development["devtool"] = false;
     }
 
     // Resolve the directories for the js-sdk for later use. We resolve these early, so we
@@ -602,6 +601,8 @@ export default (env: string, argv: Record<string, any>): webpack.Configuration =
             new I18nWebpackPlugin({
                 stringsPath: "src/i18n/strings/",
                 additionalStringsPaths: ["../../packages/shared-components/src/i18n/strings/"],
+                // Added by Ahmad: the fork ships English and German only, which keeps the other languages out of the build
+                languages: ["en_EN", "de_DE"],
             }),
 
             // This exports our CSS using the splitChunks and loaders above.

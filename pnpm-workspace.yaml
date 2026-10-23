@@ -132,7 +132,6 @@ peerDependencyRules:
 
 allowedDeprecatedVersions:
     eslint: "8"
-    react-beautiful-dnd: "13"
 
 overrides:
     # Only one instance of LiveKit in the build: the Element Call component and

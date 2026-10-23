@@ -7,7 +7,7 @@
 
 import { logger } from "matrix-js-sdk/src/logger";
 import { MapWithDefault } from "matrix-js-sdk/src/utils";
-import _ from "lodash";
+import { set } from "lodash";
 import { KEY_SEPARATOR, registerTranslations } from "@element-hq/web-shared-components";
 import { type Translation } from "matrix-web-i18n";
 
@@ -69,7 +69,7 @@ function doRegisterTranslations(customTranslations: TranslationStringsObject): v
     const langs: MapWithDefault<string, Record<string, string>> = new MapWithDefault(() => ({}));
     for (const [translationKey, translations] of Object.entries(customTranslations)) {
         for (const [lang, translation] of Object.entries(translations)) {
-            _.set(langs.getOrCreate(lang), translationKey.split(KEY_SEPARATOR), translation);
+            set(langs.getOrCreate(lang), translationKey.split(KEY_SEPARATOR), translation);
         }
     }
 

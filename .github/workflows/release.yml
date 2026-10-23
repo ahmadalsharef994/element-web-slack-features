@@ -1,0 +1,96 @@
+# Copyright 2026 Ahmad
+#
+# SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
+# Please see LICENSE files in the repository root for full details.
+
+# Builds Element Fork for Linux, Windows and macOS and attaches the installers to a GitHub release.
+# Start it by pushing a tag (`git tag v1.0.0 && git push origin v1.0.0`) or from the Actions tab.
+name: Release
+
+on:
+    push:
+        tags: ["v*"]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+        name: Build (${{ matrix.name }})
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - { name: linux, os: ubuntu-24.04 }
+                    - { name: windows, os: windows-latest }
+                    - { name: mac-arm64, os: macos-latest }
+                    - { name: mac-x64, os: macos-15-intel }
+        defaults:
+            run:
+                shell: bash
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            # The repo pins pnpm in devEngines, so install that exact version
+            - run: corepack enable && corepack prepare pnpm@11.23.0 --activate
+
+            - run: pnpm install --frozen-lockfile
+
+            - name: Build the web app
+              working-directory: apps/web
+              env:
+                  NX_TUI: "false"
+              run: |
+                  pnpm build
+                  cp ../desktop/element.io/release/config.json webapp/config.json
+
+            - name: Build the desktop app
+              working-directory: apps/desktop
+              env:
+                  NX_TUI: "false"
+              run: |
+                  pnpm exec asar p ../web/webapp webapp.asar
+                  pnpm exec nx build --skip-nx-cache
+
+            - name: Collect installers
+              run: |
+                  mkdir out
+                  cd apps/desktop/dist
+                  case "${{ matrix.name }}" in
+                      linux) cp *.deb *.tar.gz ../../../out/ ;;
+                      windows) cp squirrel-windows/*Setup*.exe *.msi ../../../out/ ;;
+                      mac-*) for f in *.dmg; do cp "$f" "../../../out/${f%.dmg}-${{ matrix.name }}.dmg"; done ;;
+                  esac
+                  ls -la ../../../out
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: installers-${{ matrix.name }}
+                  path: out/*
+                  if-no-files-found: error
+
+    release:
+        name: Publish release
+        needs: build
+        if: startsWith(github.ref, 'refs/tags/')
+        runs-on: ubuntu-24.04
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/download-artifact@v4
+              with:
+                  path: out
+                  pattern: installers-*
+                  merge-multiple: true
+
+            - name: Create the release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+              run: gh release create "${{ github.ref_name }}" out/* --title "Element Fork ${{ github.ref_name }}" --generate-notes

@@ -11,7 +11,6 @@ import React, {
     type ComponentProps,
     type Dispatch,
     type ReactNode,
-    type RefCallback,
     type SetStateAction,
     type JSX,
     useCallback,
@@ -21,7 +20,10 @@ import React, {
     useState,
     useContext,
 } from "react";
-import { DragDropContext, Draggable, Droppable, type DroppableProvidedProps } from "react-beautiful-dnd";
+import { DragDropProvider } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { KeyboardSensor, PointerActivationConstraints, PointerSensor } from "@dnd-kit/dom";
+import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import classNames from "classnames";
 import { type Room } from "matrix-js-sdk/src/matrix";
 import {
@@ -266,102 +268,107 @@ const metaSpaceComponentMap: Record<MetaSpace, typeof HomeButton> = {
     [MetaSpace.VideoRooms]: VideoRoomsButton,
 };
 
-interface IInnerSpacePanelProps extends DroppableProvidedProps {
+interface IInnerSpacePanelProps {
     children?: ReactNode;
     isPanelCollapsed: boolean;
     setPanelCollapsed: Dispatch<SetStateAction<boolean>>;
-    isDraggingOver: boolean;
-    innerRef: RefCallback<HTMLElement>;
 }
 
-// Optimisation based on https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/droppable.md#recommended-droppable--performance-optimisation
-const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
-    ({ children, isPanelCollapsed, setPanelCollapsed, isDraggingOver, innerRef, ...props }) => {
-        const sdkContext = useContext(SDKContext);
-        const [invites, metaSpaces, actualSpaces, activeSpace] = useSpaces();
-        const activeSpaces = activeSpace ? [activeSpace] : [];
+/** A top-level space that can be dragged to a new place in the list. */
+const SortableSpaceItem: React.FC<{
+    space: Room;
+    index: number;
+    activeSpaces: SpaceKey[];
+    isPanelCollapsed: boolean;
+    onExpand: () => void;
+}> = ({ space, index, ...props }) => {
+    const { ref, handleRef, isDragging } = useSortable({
+        id: space.roomId,
+        index,
+        modifiers: [RestrictToVerticalAxis],
+    });
+    // Drag by the space's own button, not the whole item, so that grabbing a sub-space doesn't move its parent
+    const setItem = useCallback(
+        (item: HTMLLIElement | null) => {
+            ref(item);
+            handleRef(item?.querySelector(":scope > .mx_SpaceButton") ?? null);
+        },
+        [ref, handleRef],
+    );
+    return (
+        <SpaceItem
+            {...props}
+            space={space}
+            innerRef={setItem}
+            className={isDragging ? "mx_SpaceItem_dragging" : undefined}
+        />
+    );
+};
 
-        const moduleSpaceItems = useModuleSpacePanelItems(ModuleApi.instance.extras);
+const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(({ children, isPanelCollapsed, setPanelCollapsed }) => {
+    const sdkContext = useContext(SDKContext);
+    const [invites, metaSpaces, actualSpaces, activeSpace] = useSpaces();
+    const activeSpaces = activeSpace ? [activeSpace] : [];
 
-        const metaSpacesSection = metaSpaces
-            .filter((key) => !(key === MetaSpace.VideoRooms && !SettingsStore.getValue("feature_video_rooms")))
-            .map((key) => {
-                const Component = metaSpaceComponentMap[key];
-                return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;
-            });
+    const moduleSpaceItems = useModuleSpacePanelItems(ModuleApi.instance.extras);
 
-        return (
-            <IndicatorScrollbar
-                {...props}
-                wrappedRef={innerRef}
-                className="mx_SpaceTreeLevel"
-                style={
-                    isDraggingOver
-                        ? {
-                              pointerEvents: "none",
-                          }
-                        : undefined
-                }
-                as="ul"
-                role="tree"
-                aria-label={_t("common|spaces")}
-            >
-                {metaSpacesSection}
-                {invites.map((s) => (
-                    <SpaceItem
-                        key={s.roomId}
-                        space={s}
-                        activeSpaces={activeSpaces}
-                        isPanelCollapsed={isPanelCollapsed}
-                        onExpand={() => setPanelCollapsed(false)}
+    const metaSpacesSection = metaSpaces
+        .filter((key) => !(key === MetaSpace.VideoRooms && !SettingsStore.getValue("feature_video_rooms")))
+        .map((key) => {
+            const Component = metaSpaceComponentMap[key];
+            return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;
+        });
+
+    return (
+        <IndicatorScrollbar className="mx_SpaceTreeLevel" as="ul" role="tree" aria-label={_t("common|spaces")}>
+            {metaSpacesSection}
+            {invites.map((s) => (
+                <SpaceItem
+                    key={s.roomId}
+                    space={s}
+                    activeSpaces={activeSpaces}
+                    isPanelCollapsed={isPanelCollapsed}
+                    onExpand={() => setPanelCollapsed(false)}
+                />
+            ))}
+            {actualSpaces.map((s, i) => (
+                <SortableSpaceItem
+                    key={s.roomId}
+                    space={s}
+                    index={i}
+                    activeSpaces={activeSpaces}
+                    isPanelCollapsed={isPanelCollapsed}
+                    onExpand={() => setPanelCollapsed(false)}
+                />
+            ))}
+            {children}
+            {moduleSpaceItems.map((item) => (
+                <li
+                    key={item.spaceKey}
+                    className={classNames("mx_SpaceItem", {
+                        collapsed: isPanelCollapsed,
+                    })}
+                    role="treeitem"
+                    aria-selected={false} // TODO
+                >
+                    <SpaceButton
+                        {...item}
+                        isNarrow={isPanelCollapsed}
+                        size="32px"
+                        selected={activeSpace === item.spaceKey}
+                        onClick={() => {
+                            sdkContext.spaceStore.setActiveSpace(item.spaceKey);
+                            item.onSelected?.();
+                        }}
                     />
-                ))}
-                {actualSpaces.map((s, i) => (
-                    <Draggable key={s.roomId} draggableId={s.roomId} index={i}>
-                        {(provided, snapshot) => (
-                            <SpaceItem
-                                {...provided.draggableProps}
-                                dragHandleProps={provided.dragHandleProps}
-                                key={s.roomId}
-                                innerRef={provided.innerRef}
-                                className={snapshot.isDragging ? "mx_SpaceItem_dragging" : undefined}
-                                space={s}
-                                activeSpaces={activeSpaces}
-                                isPanelCollapsed={isPanelCollapsed}
-                                onExpand={() => setPanelCollapsed(false)}
-                            />
-                        )}
-                    </Draggable>
-                ))}
-                {children}
-                {moduleSpaceItems.map((item) => (
-                    <li
-                        key={item.spaceKey}
-                        className={classNames("mx_SpaceItem", {
-                            collapsed: isPanelCollapsed,
-                        })}
-                        role="treeitem"
-                        aria-selected={false} // TODO
-                    >
-                        <SpaceButton
-                            {...item}
-                            isNarrow={isPanelCollapsed}
-                            size="32px"
-                            selected={activeSpace === item.spaceKey}
-                            onClick={() => {
-                                sdkContext.spaceStore.setActiveSpace(item.spaceKey);
-                                item.onSelected?.();
-                            }}
-                        />
-                    </li>
-                ))}
-                {shouldShowComponent(UIComponent.CreateSpaces) && (
-                    <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
-                )}
-            </IndicatorScrollbar>
-        );
-    },
-);
+                </li>
+            ))}
+            {shouldShowComponent(UIComponent.CreateSpaces) && (
+                <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
+            )}
+        </IndicatorScrollbar>
+    );
+});
 
 const SpacePanel: React.FC = () => {
     const sdkContext = useContext(SDKContext);
@@ -403,16 +410,41 @@ const SpacePanel: React.FC = () => {
     return (
         <RovingTabIndexProvider handleHomeEnd handleUpDown={!dragging}>
             {({ onKeyDownHandler, onDragEndHandler }) => (
-                <DragDropContext
+                <DragDropProvider
                     onDragStart={() => {
                         setDragging(true);
                     }}
-                    onDragEnd={(result) => {
+                    onDragEnd={(event) => {
                         setDragging(false);
-                        if (!result.destination) return; // dropped outside the list
-                        sdkContext.spaceStore.moveRootSpace(result.source.index, result.destination.index);
+                        const { source } = event.operation;
+                        if (!event.canceled && isSortable(source) && source.initialIndex !== source.index) {
+                            sdkContext.spaceStore.moveRootSpace(source.initialIndex, source.index);
+                        }
                         onDragEndHandler();
                     }}
+                    sensors={[
+                        // A small movement is needed before a drag starts, so a plain click still opens the space
+                        PointerSensor.configure({
+                            activationConstraints(event) {
+                                if (event.pointerType === "touch") {
+                                    return [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })];
+                                }
+                                return [new PointerActivationConstraints.Distance({ value: 5 })];
+                            },
+                        }),
+                        // Space only: Enter opens the space
+                        KeyboardSensor.configure({
+                            keyboardCodes: {
+                                start: ["Space"],
+                                cancel: ["Escape"],
+                                end: ["Space"],
+                                up: ["ArrowUp"],
+                                down: ["ArrowDown"],
+                                left: ["ArrowLeft"],
+                                right: ["ArrowRight"],
+                            },
+                        }),
+                    ]}
                 >
                     <nav
                         className={classNames("mx_SpacePanel", {
@@ -453,25 +485,13 @@ const SpacePanel: React.FC = () => {
                         >
                             <ChevronRightIcon />
                         </AccessibleButton>
-                        <Droppable droppableId="top-level-spaces">
-                            {(provided, snapshot) => (
-                                <InnerSpacePanel
-                                    {...provided.droppableProps}
-                                    isPanelCollapsed={isPanelCollapsed}
-                                    setPanelCollapsed={setPanelCollapsed}
-                                    isDraggingOver={snapshot.isDraggingOver}
-                                    innerRef={provided.innerRef}
-                                >
-                                    {provided.placeholder}
-                                </InnerSpacePanel>
-                            )}
-                        </Droppable>
+                        <InnerSpacePanel isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
 
                         <ThreadsActivityCentre displayButtonLabel={!isPanelCollapsed} />
 
                         <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />
                     </nav>
-                </DragDropContext>
+                </DragDropProvider>
             )}
         </RovingTabIndexProvider>
     );

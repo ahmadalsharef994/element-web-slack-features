@@ -20,7 +20,6 @@ import React, {
 import classNames from "classnames";
 import { type Room, RoomEvent } from "matrix-js-sdk/src/matrix";
 import { KnownMembership } from "matrix-js-sdk/src/types";
-import { type DraggableProvidedDragHandleProps } from "react-beautiful-dnd";
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -196,7 +195,6 @@ interface IItemProps extends InputHTMLAttributes<HTMLLIElement> {
     onExpand?: () => void;
     parents?: Set<string>;
     innerRef?: LegacyRef<HTMLLIElement>;
-    dragHandleProps?: DraggableProvidedDragHandleProps | null;
 }
 
 interface IItemState {
@@ -314,17 +312,8 @@ export class SpaceItem extends React.PureComponent<IItemProps, IItemState> {
     };
 
     public render(): React.ReactNode {
-        const {
-            space,
-            activeSpaces,
-            isNested,
-            isPanelCollapsed,
-            onExpand,
-            parents,
-            innerRef,
-            dragHandleProps,
-            ...otherProps
-        } = this.props;
+        const { space, activeSpaces, isNested, isPanelCollapsed, onExpand, parents, innerRef, ...otherProps } =
+            this.props;
 
         const collapsed = this.isCollapsed;
 
@@ -366,7 +355,6 @@ export class SpaceItem extends React.PureComponent<IItemProps, IItemState> {
             </AccessibleButton>
         ) : null;
 
-        const { tabIndex, ...restDragHandleProps } = dragHandleProps || {};
         const selected = activeSpaces.includes(space.roomId);
 
         return (
@@ -379,7 +367,6 @@ export class SpaceItem extends React.PureComponent<IItemProps, IItemState> {
                 role="treeitem"
             >
                 <SpaceButton
-                    {...restDragHandleProps}
                     space={space}
                     className={isInvite ? "mx_SpaceButton_invite" : undefined}
                     selected={selected}

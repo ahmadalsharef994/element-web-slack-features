@@ -1,0 +1,24 @@
+Element Fork
+Copyright 2026 Ahmad
+
+This product is a modified version of Element Web and Element Desktop:
+  Copyright (c) 2014-2017 OpenMarket Ltd
+  Copyright (c) 2017 Vector Creations Ltd
+  Copyright (c) 2017-2025 New Vector Ltd
+  Copyright (c) 2025 Element Creations Ltd.
+Upstream: https://github.com/element-hq/element-web
+
+Element Fork is distributed under the GNU Affero General Public License,
+version 3 only (see LICENSE-AGPL-3.0). It is not distributed under the
+Element Commercial Licence.
+
+Source code, including all changes made in this fork, is available at
+https://github.com/ahmadalsharef994/element-web-slack-features
+Changes from upstream are listed in docs/fork/ADDED_BY_AHMAD.md and in the
+git history.
+
+"Element" is a trademark of Element. This fork is a separate, unofficial
+project, is not endorsed by Element, and is named "Element Fork" to make that
+clear.
+
+Third-party components keep their own licences; see their package metadata.

@@ -16,6 +16,8 @@ interface Options {
     stringsPath: string;
     // Additional paths to strings which will be merged into the application's own strings for supported languages
     additionalStringsPaths?: string[];
+    // Languages (file names without ".json") to ship. Defaults to every language found in `stringsPath`
+    languages?: string[];
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -64,7 +66,8 @@ export class I18nWebpackPlugin {
                     const primaryPath = paths[0];
                     const includeLangs = [...new Set(await fs.readdir(primaryPath))]
                         .filter((fn) => fn.endsWith(".json"))
-                        .map((f) => f.slice(0, -5));
+                        .map((f) => f.slice(0, -5))
+                        .filter((lang) => !this.options.languages || this.options.languages.includes(lang));
 
                     const langFileMap: Record<string, string> = {};
 

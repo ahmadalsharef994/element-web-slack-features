@@ -76,9 +76,21 @@ git fetch upstream
 git merge upstream/develop
 ```
 
+## Download
+
+Installers for Windows (`.exe`), Linux (`.deb`) and Mac (`.dmg`) are on the
+[latest release](https://github.com/ahmadalsharef994/element-web-slack-features/releases/latest) page. Steps for
+non-developers are in [docs/fork/INSTALL.md](docs/fork/INSTALL.md).
+
 ## Upstream and licence
 
-Element Fork is built on Element by New Vector Ltd. The original README is kept at
-[docs/fork/UPSTREAM_README.md](docs/fork/UPSTREAM_README.md). The code remains under the upstream multi-licence
-(AGPL-3.0-only, GPL-3.0-only or the Element Commercial Licence); see [LICENSE-AGPL-3.0](LICENSE-AGPL-3.0) and
-[LICENSE-GPL-3.0](LICENSE-GPL-3.0).
+Element Fork is built on Element by New Vector Ltd (Element). The original README is kept at
+[docs/fork/UPSTREAM_README.md](docs/fork/UPSTREAM_README.md).
+
+Upstream is multi-licensed. This fork is distributed under the **GNU Affero General Public License v3.0 only**
+([LICENSE-AGPL-3.0](LICENSE-AGPL-3.0)); the GPL-3.0 text ([LICENSE-GPL-3.0](LICENSE-GPL-3.0)) is kept because upstream
+files offer it too. The paid Element Commercial Licence is a private agreement with Element and is **not** granted to
+users of this fork. Upstream copyright notices stay in every file, and new files carry Ahmad's. See [NOTICE](NOTICE).
+
+The complete source of every release, including this fork's changes, is this repository. If you receive a build,
+you can get the matching source from the release's tag.
