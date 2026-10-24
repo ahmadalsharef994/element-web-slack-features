@@ -50,13 +50,22 @@ jobs:
                   pnpm build
                   cp ../desktop/element.io/release/config.json webapp/config.json
 
+            # build/icon.icon is an Icon Composer file, which only the actool from Xcode 26 or later can compile
+            - name: Select Xcode 26
+              if: startsWith(matrix.name, 'mac-')
+              run: |
+                  xcode=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -n 1)
+                  sudo xcode-select -s "$xcode"
+                  xcrun actool --version
+
+            # The release job publishes the installers, so stop electron-builder from publishing on a tag push
             - name: Build the desktop app
               working-directory: apps/desktop
               env:
                   NX_TUI: "false"
               run: |
                   pnpm exec asar p ../web/webapp webapp.asar
-                  pnpm exec nx build --skip-nx-cache
+                  pnpm exec nx build --skip-nx-cache -- --publish=never
 
             - name: Collect installers
               run: |
