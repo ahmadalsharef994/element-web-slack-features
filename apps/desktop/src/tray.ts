@@ -9,9 +9,6 @@ Please see LICENSE files in the repository root for full details.
 
 import { app, Tray, Menu, nativeImage } from "electron";
 import { v5 as uuidv5 } from "uuid";
-import { writeFile } from "node:fs/promises";
-import pngToIco from "png-to-ico";
-import path from "node:path";
 
 import { _t } from "./language-helper.js";
 import { getBuildConfig } from "./build-config.js";
@@ -66,41 +63,8 @@ export async function create(): Promise<void> {
     initApplicationMenu();
     trayIcon.on("click", toggleWin);
 
-    // See also, badge.ts
-    let lastFavicon: string | null = null;
-    global.mainWindow?.webContents.on("page-favicon-updated", async function (ev, favicons) {
-        if (!favicons || favicons.length <= 0 || !favicons[0].startsWith("data:")) {
-            if (lastFavicon !== null) {
-                global.mainWindow?.setIcon(defaultIcon);
-                trayIcon?.setImage(defaultIcon);
-                lastFavicon = null;
-            }
-            return;
-        }
-
-        // No need to change, shortcut
-        if (favicons[0] === lastFavicon) return;
-        lastFavicon = favicons[0];
-
-        let newFavicon = nativeImage.createFromDataURL(favicons[0]);
-
-        // Windows likes ico's too much.
-        if (process.platform === "win32") {
-            try {
-                const icoPath = path.join(app.getPath("temp"), "win32_element_icon.ico");
-                await writeFile(icoPath, await pngToIco(newFavicon.toPNG()));
-                newFavicon = nativeImage.createFromPath(icoPath);
-            } catch (e) {
-                console.error("Failed to make win32 ico", e);
-            }
-            // Always update the tray icon for Windows.
-            trayIcon?.setImage(newFavicon);
-        } else {
-            trayIcon?.setImage(newFavicon);
-            global.mainWindow?.setIcon(newFavicon);
-        }
-    });
-
+    // The web app's favicon (Element's green logo, with unread badges) is deliberately not applied here:
+    // the tray and window keep the fork's own icon.
     global.mainWindow?.webContents.on("page-title-updated", function (ev, title) {
         trayIcon?.setToolTip(title);
     });
