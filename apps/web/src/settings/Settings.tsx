@@ -568,7 +568,8 @@ export const SETTINGS: Settings = {
     "sendReadReceipts": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("settings|send_read_receipts"),
-        default: true,
+        // Fork: off by default so others don't see when you've read their messages (private receipts are sent instead)
+        default: false,
         controller: new ServerSupportUnstableFeatureController(
             "sendReadReceipts",
             defaultWatchManager,
